@@ -13,7 +13,7 @@
 		<PackageId>MauiNativePdfView</PackageId>
 		<Version>1.0.0-alpha1</Version>
 		<Authors>Your Name</Authors>
-		<Description>Cross-platform .NET MAUI PDF viewer library using native controls (PDFKit for iOS, AhmerPdfium for Android)</Description>
+		<Description>Cross-platform .NET MAUI PDF viewer library using native controls (PdfKit for iOS, AhmerPdfium for Android)</Description>
 		<PackageProjectUrl>https://github.com/YourUsername/MauiNativePdfView</PackageProjectUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/YourUsername/MauiNativePdfView</RepositoryUrl>
