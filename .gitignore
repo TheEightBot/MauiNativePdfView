@@ -429,3 +429,4 @@ project.xcworkspace/
 # MAUI specific
 **/Resources/Raw/**/*
 !**/Resources/Raw/.gitkeep
+!**/Resources/Raw/sample.pdf
