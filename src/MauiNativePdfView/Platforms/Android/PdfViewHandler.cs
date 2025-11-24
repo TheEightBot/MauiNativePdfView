@@ -27,6 +27,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         [nameof(PdfView.MaxZoom)] = MapMaxZoom,
         [nameof(PdfView.PageSpacing)] = MapPageSpacing,
         [nameof(PdfView.FitPolicy)] = MapFitPolicy,
+        [nameof(PdfView.DisplayMode)] = MapDisplayMode,
         [nameof(PdfView.ScrollOrientation)] = MapScrollOrientation,
         [nameof(PdfView.DefaultPage)] = MapDefaultPage,
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
@@ -71,7 +72,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
     protected override void ConnectHandler(PDFView platformView)
     {
         base.ConnectHandler(platformView);
-        
+
         // Apply initial values
         MapSource(this, VirtualView);
         MapEnableZoom(this, VirtualView);
@@ -81,6 +82,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         MapMaxZoom(this, VirtualView);
         MapPageSpacing(this, VirtualView);
         MapFitPolicy(this, VirtualView);
+        MapDisplayMode(this, VirtualView);
         MapScrollOrientation(this, VirtualView);
         MapDefaultPage(this, VirtualView);
         MapEnableAntialiasing(this, VirtualView);
@@ -210,6 +212,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.FitPolicy = view.FitPolicy;
+        }
+    }
+
+    private static void MapDisplayMode(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.DisplayMode = view.DisplayMode;
         }
     }
 

@@ -23,7 +23,7 @@ public partial class PdfTestPage : ContentPage
         try
         {
             StatusLabel.Text = "Loading PDF...";
-            
+
             // Load from raw asset
             PdfViewer.Source = PdfSource.FromAsset("sample.pdf");
         }

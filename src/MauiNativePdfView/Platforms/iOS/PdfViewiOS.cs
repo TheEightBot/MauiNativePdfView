@@ -24,7 +24,7 @@ public class PdfViewiOS : IPdfView, IDisposable
         _pdfView = new PdfKit.PdfView
         {
             AutoScales = true,
-            DisplayMode = PdfDisplayMode.SinglePageContinuous,
+            DisplayMode = PdfKit.PdfDisplayMode.SinglePageContinuous,
             DisplayDirection = PdfDisplayDirection.Vertical
         };
 
@@ -115,16 +115,42 @@ public class PdfViewiOS : IPdfView, IDisposable
             {
                 case FitPolicy.Width:
                     _pdfView.AutoScales = true;
-                    _pdfView.DisplayMode = PdfDisplayMode.SinglePageContinuous;
+                    _pdfView.DisplayMode = PdfKit.PdfDisplayMode.SinglePageContinuous;
                     break;
                 case FitPolicy.Height:
                     _pdfView.AutoScales = true;
-                    _pdfView.DisplayMode = PdfDisplayMode.SinglePage;
+                    _pdfView.DisplayMode = PdfKit.PdfDisplayMode.SinglePage;
                     break;
                 case FitPolicy.Both:
                     _pdfView.AutoScales = false;
                     break;
             }
+        }
+    }
+
+    public Abstractions.PdfDisplayMode DisplayMode
+    {
+        get
+        {
+            return _pdfView.DisplayMode switch
+            {
+                PdfKit.PdfDisplayMode.SinglePage => Abstractions.PdfDisplayMode.SinglePage,
+                PdfKit.PdfDisplayMode.SinglePageContinuous => Abstractions.PdfDisplayMode.SinglePageContinuous,
+                PdfKit.PdfDisplayMode.TwoUp => Abstractions.PdfDisplayMode.TwoUp,
+                PdfKit.PdfDisplayMode.TwoUpContinuous => Abstractions.PdfDisplayMode.TwoUpContinuous,
+                _ => Abstractions.PdfDisplayMode.SinglePageContinuous
+            };
+        }
+        set
+        {
+            _pdfView.DisplayMode = value switch
+            {
+                Abstractions.PdfDisplayMode.SinglePage => PdfKit.PdfDisplayMode.SinglePage,
+                Abstractions.PdfDisplayMode.SinglePageContinuous => PdfKit.PdfDisplayMode.SinglePageContinuous,
+                Abstractions.PdfDisplayMode.TwoUp => PdfKit.PdfDisplayMode.TwoUp,
+                Abstractions.PdfDisplayMode.TwoUpContinuous => PdfKit.PdfDisplayMode.TwoUpContinuous,
+                _ => PdfKit.PdfDisplayMode.SinglePageContinuous
+            };
         }
     }
 
@@ -337,7 +363,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     {
         var location = recognizer.LocationInView(_pdfView);
         var pageIndex = CurrentPage;
-        
+
         // Convert location to page coordinates
         var page = _pdfView.CurrentPage;
         if (page != null)

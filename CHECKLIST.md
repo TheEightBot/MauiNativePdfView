@@ -3,6 +3,7 @@
 ## Quick Reference Checklist
 
 ### 📋 Phase 1: Project Setup & Infrastructure
+
 **Branch**: `feature/project-setup`
 
 - [x] Create solution structure
@@ -20,6 +21,7 @@
 ---
 
 ### 📋 Phase 2: Android Native Wrapper Implementation
+
 **Branch**: `feature/android-implementation`
 
 - [x] Design shared abstraction layer (IPdfView, IPdfDocument interfaces)
@@ -41,6 +43,7 @@
 ---
 
 ### 📋 Phase 3: iOS Native Wrapper Implementation
+
 **Branch**: `feature/ios-implementation`
 
 - [x] Create iOS platform wrapper (PdfViewiOS class)
@@ -59,6 +62,7 @@
 ---
 
 ### 📋 Phase 4: MAUI Control & Cross-Platform API
+
 **Branch**: `feature/maui-control`
 
 - [x] Design MAUI control
@@ -73,6 +77,7 @@
 ---
 
 ### 📋 Phase 5: Sample Application Development
+
 **Branch**: `feature/sample-app`
 
 - [x] Create sample MAUI application
@@ -86,9 +91,11 @@
 ---
 
 ### 📋 Phase 4: Core Feature Enhancements
+
 **Branch**: `feature/core-enhancements`
 
 #### 4.1 Scroll Direction Control
+
 - [ ] Create `ScrollOrientation` enum (Vertical, Horizontal)
 - [ ] Add `ScrollOrientation` property to IPdfView interface
 - [ ] Implement in Android PdfViewAndroid (swipeHorizontal)
@@ -99,6 +106,7 @@
 - [ ] Update sample app with orientation toggle
 
 #### 4.2 Default Page Support
+
 - [ ] Add `DefaultPage` property to IPdfView interface
 - [ ] Implement in Android (defaultPage configurator)
 - [ ] Implement in iOS (goToPage after load)
@@ -108,6 +116,7 @@
 - [ ] Document in sample app
 
 #### 4.3 Rendering Quality Control
+
 - [ ] Add `EnableAntialiasing` property (Android only)
 - [ ] Add `UseBestQuality` property (Android only)
 - [ ] Implement in Android PdfViewAndroid
@@ -117,6 +126,7 @@
 - [ ] Update sample app with quality toggles
 
 #### 4.4 Background Color Customization
+
 - [ ] Add `BackgroundColor` property to IPdfView
 - [ ] Implement in Android (view background)
 - [ ] Implement in iOS (view backgroundColor)
@@ -126,6 +136,7 @@
 - [ ] Add color picker to sample app
 
 #### 4.5 Additional Events
+
 - [ ] Add `Tapped` event for single tap detection
 - [ ] Add `Rendered` event for initial render complete
 - [ ] Create TappedEventArgs class
@@ -141,9 +152,11 @@
 ---
 
 ### 📋 Phase 5: Android-Specific Enhancements
+
 **Branch**: `feature/android-enhancements`
 
 #### 5.1 ViewPager-Style Navigation
+
 - [ ] Add `PageSnap` property (snap to page boundaries)
 - [ ] Add `PageFling` property (single page per fling)
 - [ ] Add `AutoSpacing` property (fit pages independently)
@@ -154,12 +167,14 @@
 - [ ] Document Android-specific features
 
 #### 5.2 Mid-Level Zoom
+
 - [ ] Add `MidZoom` property (three-level zoom)
 - [ ] Implement in Android (setMidZoom)
 - [ ] Test zoom level transitions
 - [ ] Document zoom behavior differences
 
 #### 5.3 Night Mode
+
 - [ ] Add `NightMode` property
 - [ ] Implement in Android (nightMode configurator)
 - [ ] Test color inversion
@@ -167,6 +182,7 @@
 - [ ] Document as Android-only feature
 
 #### 5.4 Advanced Events
+
 - [ ] Add `PageScrolling` event with scroll offset
 - [ ] Add `LongPressed` event
 - [ ] Create PageScrollingEventArgs
@@ -176,6 +192,7 @@
 - [ ] Test event scenarios
 
 #### 5.5 Password-Protected PDFs
+
 - [ ] Add `Password` property to PdfSource
 - [ ] Implement in Android (password configurator)
 - [ ] Test with encrypted PDFs
@@ -187,9 +204,11 @@
 ---
 
 ### 📋 Phase 6: iOS-Specific Enhancements
+
 **Branch**: `feature/ios-enhancements`
 
 #### 6.1 Extended Display Modes
+
 - [ ] Create `DisplayMode` enum
 - [ ] Add `DisplayMode` property to IPdfView
 - [ ] Implement in iOS PdfViewiOS
@@ -198,6 +217,7 @@
 - [ ] Document iOS display capabilities
 
 #### 6.2 Enhanced Document Properties
+
 - [ ] Add `Creator` property
 - [ ] Add `Keywords` property
 - [ ] Add `CreationDate` property
@@ -208,6 +228,7 @@
 - [ ] Update sample app to display properties
 
 #### 6.3 Page Labels
+
 - [ ] Add `GetPageLabel(int)` method
 - [ ] Implement in iOS
 - [ ] Return custom page numbering
@@ -215,6 +236,7 @@
 - [ ] Document page label support
 
 #### 6.4 Thumbnail Support
+
 - [ ] Research PDFThumbnailView integration
 - [ ] Design thumbnail API
 - [ ] Add thumbnail generation methods
@@ -227,9 +249,11 @@
 ---
 
 ### 📋 Phase 7: Annotation Support
+
 **Branch**: `feature/annotations`
 
 #### 7.1 Annotation Rendering
+
 - [ ] Add `EnableAnnotationRendering` property
 - [ ] Implement in Android
 - [ ] Implement in iOS
@@ -237,6 +261,7 @@
 - [ ] Document annotation support
 
 #### 7.2 Annotation Events
+
 - [ ] Add `AnnotationTapped` event
 - [ ] Create AnnotationTappedEventArgs
 - [ ] Implement in both platforms
@@ -249,6 +274,7 @@
 ---
 
 ### 📋 Phase 8: Documentation & Polish
+
 **Branch**: `feature/documentation`
 
 - [ ] Create comprehensive documentation
@@ -262,6 +288,7 @@
 ---
 
 ### 📋 Phase 9: NuGet Package & Release
+
 **Branch**: `release/v1.0.0`
 
 - [ ] Prepare for NuGet packaging
