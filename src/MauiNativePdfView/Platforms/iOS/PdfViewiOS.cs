@@ -136,8 +136,6 @@ public class PdfViewiOS : IPdfView, IDisposable
             {
                 PdfKit.PdfDisplayMode.SinglePage => Abstractions.PdfDisplayMode.SinglePage,
                 PdfKit.PdfDisplayMode.SinglePageContinuous => Abstractions.PdfDisplayMode.SinglePageContinuous,
-                PdfKit.PdfDisplayMode.TwoUp => Abstractions.PdfDisplayMode.TwoUp,
-                PdfKit.PdfDisplayMode.TwoUpContinuous => Abstractions.PdfDisplayMode.TwoUpContinuous,
                 _ => Abstractions.PdfDisplayMode.SinglePageContinuous
             };
         }
@@ -147,8 +145,6 @@ public class PdfViewiOS : IPdfView, IDisposable
             {
                 Abstractions.PdfDisplayMode.SinglePage => PdfKit.PdfDisplayMode.SinglePage,
                 Abstractions.PdfDisplayMode.SinglePageContinuous => PdfKit.PdfDisplayMode.SinglePageContinuous,
-                Abstractions.PdfDisplayMode.TwoUp => PdfKit.PdfDisplayMode.TwoUp,
-                Abstractions.PdfDisplayMode.TwoUpContinuous => PdfKit.PdfDisplayMode.TwoUpContinuous,
                 _ => PdfKit.PdfDisplayMode.SinglePageContinuous
             };
         }

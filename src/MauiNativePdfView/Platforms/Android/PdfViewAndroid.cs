@@ -242,6 +242,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
         if (_source == null)
             return;
 
+        // Store current page to restore after reload
+        int pageToRestore = _currentPage;
+
         try
         {
             var configurator = _source switch
@@ -254,7 +257,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
                 _ => throw new NotSupportedException($"PDF source type {_source.GetType().Name} is not supported.")
             };
 
-            ConfigureAndLoad(configurator);
+            ConfigureAndLoad(configurator, pageToRestore);
         }
         catch (Exception ex)
         {
@@ -262,7 +265,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
-    private void ConfigureAndLoad(PDFView.Configurator configurator)
+    private void ConfigureAndLoad(PDFView.Configurator configurator, int pageToRestore = -1)
     {
         // Determine page snap and fling based on display mode
         bool enablePageSnap = _displayMode == Abstractions.PdfDisplayMode.SinglePage;
@@ -272,7 +275,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
             .EnableSwipe(_enableSwipe)
             .EnableDoubleTap(_enableZoom)
             .SwipeHorizontal(_scrollOrientation == PdfScrollOrientation.Horizontal)
-            .DefaultPage(_defaultPage)
+            .DefaultPage(pageToRestore >= 0 ? pageToRestore : _defaultPage)
             .AutoSpacing(false)
             .Spacing(_pageSpacing)
             .PageSnap(enablePageSnap)
@@ -280,7 +283,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
             .NightMode(false)
             .FitEachPage(false)
             .EnableAntialiasing(_enableAntialiasing)
-            .OnLoad(new LoadCompleteListener(this))
+            .OnLoad(new LoadCompleteListener(this, pageToRestore))
             .OnPageChange(new PageChangeListener(this))
             .OnError(new ErrorListener(this))
             .OnTap(new TapListener(this))
@@ -288,8 +291,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
         // Note: UseBestQuality sets rendering quality (ARGB_8888 vs RGB_565)
         // This is handled by the PDFView configuration automatically based on device capabilities
-        // Note: TwoUp and TwoUpContinuous modes are not directly supported in Android PDFView
-        // These will fall back to continuous scrolling behavior
 
         if (_enableLinkNavigation)
         {
@@ -303,6 +304,19 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private void OnDocumentLoaded(int pageCount)
     {
         _pageCount = pageCount;
+        DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
+    }
+
+    private void OnDocumentLoadedWithPageRestore(int pageCount, int pageToRestore)
+    {
+        _pageCount = pageCount;
+        
+        // Restore the page if valid
+        if (pageToRestore >= 0 && pageToRestore < pageCount)
+        {
+            _pdfView.JumpTo(pageToRestore);
+        }
+        
         DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
     }
 
@@ -349,17 +363,26 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private class LoadCompleteListener : Java.Lang.Object, IOnLoadCompleteListener
     {
         private readonly WeakReference<PdfViewAndroid> _viewRef;
+        private readonly int _pageToRestore;
 
-        public LoadCompleteListener(PdfViewAndroid view)
+        public LoadCompleteListener(PdfViewAndroid view, int pageToRestore = -1)
         {
             _viewRef = new WeakReference<PdfViewAndroid>(view);
+            _pageToRestore = pageToRestore;
         }
 
         public void LoadComplete(int nbPages)
         {
             if (_viewRef.TryGetTarget(out var view))
             {
-                view.OnDocumentLoaded(nbPages);
+                if (_pageToRestore >= 0)
+                {
+                    view.OnDocumentLoadedWithPageRestore(nbPages, _pageToRestore);
+                }
+                else
+                {
+                    view.OnDocumentLoaded(nbPages);
+                }
             }
         }
     }

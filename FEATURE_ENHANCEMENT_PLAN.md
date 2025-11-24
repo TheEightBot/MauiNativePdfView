@@ -123,10 +123,12 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 **Status:** Partially complete - Display Mode merged, remaining items pending
 
 #### 5.1 Single Page Display Mode (Page Snap) ✅ **COMPLETE**
-- ✅ Added `PdfDisplayMode` enum: `SinglePage`, `SinglePageContinuous`, `TwoUp`, `TwoUpContinuous`
+- ✅ Added `PdfDisplayMode` enum: `SinglePage`, `SinglePageContinuous`
 - ✅ **iOS:** Native support via `PdfDisplayMode` enum (maps directly)
 - ✅ **Android:** Implemented with `pageSnap(true)`, `pageFling(true)` configurators
 - ✅ **Fixed:** Android properties now trigger reload when changed after document loads
+- ✅ **Fixed:** Android now preserves current page when reloading after property changes
+- ✅ Removed TwoUp modes (not well-supported on Android)
 - ✅ Merged to main (commit bb5d68d)
 
 #### 5.2 Long Press Support

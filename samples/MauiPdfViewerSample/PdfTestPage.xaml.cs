@@ -17,16 +17,12 @@ public partial class PdfTestPage : ContentPage
     private readonly PdfDisplayMode[] _displayModes = new[]
     {
         PdfDisplayMode.SinglePageContinuous,
-        PdfDisplayMode.SinglePage,
-        PdfDisplayMode.TwoUpContinuous,
-        PdfDisplayMode.TwoUp
+        PdfDisplayMode.SinglePage
     };
     private readonly string[] _displayModeNames = new[]
     {
         "Single Page Continuous",
-        "Single Page",
-        "Two-Up Continuous",
-        "Two-Up"
+        "Single Page"
     };
 
     public PdfTestPage()
