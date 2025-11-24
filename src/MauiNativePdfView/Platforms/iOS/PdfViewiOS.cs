@@ -14,6 +14,10 @@ public class PdfViewiOS : IPdfView, IDisposable
     private PdfSource? _source;
     private bool _disposed;
     private NSObject? _pageChangedObserver;
+    private UITapGestureRecognizer? _tapGestureRecognizer;
+    private PdfScrollOrientation _scrollOrientation = PdfScrollOrientation.Vertical;
+    private int _defaultPage = 0;
+    private bool _documentLoaded = false;
 
     public PdfViewiOS()
     {
@@ -29,6 +33,10 @@ public class PdfViewiOS : IPdfView, IDisposable
             PdfKit.PdfView.PageChangedNotification,
             OnPageChangedNotification,
             _pdfView);
+
+        // Add tap gesture recognizer
+        _tapGestureRecognizer = new UITapGestureRecognizer(HandleTap);
+        _pdfView.AddGestureRecognizer(_tapGestureRecognizer);
     }
 
     /// <summary>
@@ -120,10 +128,64 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
     }
 
+    public PdfScrollOrientation ScrollOrientation
+    {
+        get => _scrollOrientation;
+        set
+        {
+            _scrollOrientation = value;
+            _pdfView.DisplayDirection = value == PdfScrollOrientation.Horizontal
+                ? PdfDisplayDirection.Horizontal
+                : PdfDisplayDirection.Vertical;
+        }
+    }
+
+    public int DefaultPage
+    {
+        get => _defaultPage;
+        set => _defaultPage = value;
+    }
+
+    public bool EnableAntialiasing
+    {
+        get => true; // iOS always uses antialiasing
+        set { } // No-op on iOS
+    }
+
+    public bool UseBestQuality
+    {
+        get => true; // iOS always uses best quality
+        set { } // No-op on iOS
+    }
+
+    public Color? BackgroundColor
+    {
+        get => _pdfView.BackgroundColor != null
+            ? Color.FromRgba(
+                _pdfView.BackgroundColor.CGColor.Components[0],
+                _pdfView.BackgroundColor.CGColor.Components[1],
+                _pdfView.BackgroundColor.CGColor.Components[2],
+                _pdfView.BackgroundColor.CGColor.Alpha)
+            : null;
+        set
+        {
+            if (value != null)
+            {
+                _pdfView.BackgroundColor = UIColor.FromRGBA(
+                    (float)value.Red,
+                    (float)value.Green,
+                    (float)value.Blue,
+                    (float)value.Alpha);
+            }
+        }
+    }
+
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
     public event EventHandler<PageChangedEventArgs>? PageChanged;
     public event EventHandler<PdfErrorEventArgs>? Error;
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
+    public event EventHandler<PdfTappedEventArgs>? Tapped;
+    public event EventHandler<RenderedEventArgs>? Rendered;
 
     public void GoToPage(int pageIndex)
     {
@@ -222,8 +284,32 @@ public class PdfViewiOS : IPdfView, IDisposable
                     author,
                     subject));
 
+                // Navigate to default page if specified
+                if (_defaultPage > 0 && _defaultPage < pageCount)
+                {
+                    var page = document.GetPage((nint)_defaultPage);
+                    if (page != null)
+                    {
+                        _pdfView.GoToPage(page);
+                    }
+                }
+
                 // Trigger initial page changed event
-                PageChanged?.Invoke(this, new PageChangedEventArgs(0, (int)pageCount));
+                var currentPageIndex = _defaultPage > 0 && _defaultPage < pageCount ? _defaultPage : 0;
+                PageChanged?.Invoke(this, new PageChangedEventArgs(currentPageIndex, pageCount));
+
+                // Fire rendered event after a short delay to ensure rendering is complete
+                if (!_documentLoaded)
+                {
+                    _documentLoaded = true;
+                    System.Threading.Tasks.Task.Delay(100).ContinueWith(_ =>
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            Rendered?.Invoke(this, new RenderedEventArgs(pageCount));
+                        });
+                    });
+                }
             }
             else
             {
@@ -247,6 +333,24 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
     }
 
+    private void HandleTap(UITapGestureRecognizer recognizer)
+    {
+        var location = recognizer.LocationInView(_pdfView);
+        var pageIndex = CurrentPage;
+        
+        // Convert location to page coordinates
+        var page = _pdfView.CurrentPage;
+        if (page != null)
+        {
+            var pagePoint = _pdfView.ConvertPointToPage(location, page);
+            Tapped?.Invoke(this, new PdfTappedEventArgs(pageIndex, (float)pagePoint.X, (float)pagePoint.Y));
+        }
+        else
+        {
+            Tapped?.Invoke(this, new PdfTappedEventArgs(pageIndex, (float)location.X, (float)location.Y));
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -259,6 +363,13 @@ public class PdfViewiOS : IPdfView, IDisposable
             NSNotificationCenter.DefaultCenter.RemoveObserver(_pageChangedObserver);
             _pageChangedObserver?.Dispose();
             _pageChangedObserver = null;
+        }
+
+        if (_tapGestureRecognizer != null)
+        {
+            _pdfView.RemoveGestureRecognizer(_tapGestureRecognizer);
+            _tapGestureRecognizer?.Dispose();
+            _tapGestureRecognizer = null;
         }
 
         _pdfView?.Dispose();

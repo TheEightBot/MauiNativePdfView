@@ -26,6 +26,11 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private float _maxZoom = 3.0f;
     private int _pageSpacing = 10;
     private Abstractions.FitPolicy _fitPolicy = Abstractions.FitPolicy.Width;
+    private PdfScrollOrientation _scrollOrientation = PdfScrollOrientation.Vertical;
+    private int _defaultPage = 0;
+    private bool _enableAntialiasing = true;
+    private bool _useBestQuality = true;
+    private Color? _backgroundColor;
     private int _currentPage = 0;
     private int _pageCount = 0;
 
@@ -113,10 +118,54 @@ public class PdfViewAndroid : IPdfView, IDisposable
         set => _fitPolicy = value;
     }
 
+    public PdfScrollOrientation ScrollOrientation
+    {
+        get => _scrollOrientation;
+        set => _scrollOrientation = value;
+    }
+
+    public int DefaultPage
+    {
+        get => _defaultPage;
+        set => _defaultPage = value;
+    }
+
+    public bool EnableAntialiasing
+    {
+        get => _enableAntialiasing;
+        set => _enableAntialiasing = value;
+    }
+
+    public bool UseBestQuality
+    {
+        get => _useBestQuality;
+        set => _useBestQuality = value;
+    }
+
+    public Color? BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            _backgroundColor = value;
+            if (value != null)
+            {
+                var androidColor = global::Android.Graphics.Color.Argb(
+                    (int)(value.Alpha * 255),
+                    (int)(value.Red * 255),
+                    (int)(value.Green * 255),
+                    (int)(value.Blue * 255));
+                _pdfView.SetBackgroundColor(androidColor);
+            }
+        }
+    }
+
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
     public event EventHandler<PageChangedEventArgs>? PageChanged;
     public event EventHandler<PdfErrorEventArgs>? Error;
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
+    public event EventHandler<PdfTappedEventArgs>? Tapped;
+    public event EventHandler<RenderedEventArgs>? Rendered;
 
     public void GoToPage(int pageIndex)
     {
@@ -163,14 +212,21 @@ public class PdfViewAndroid : IPdfView, IDisposable
         configurator
             .EnableSwipe(_enableSwipe)
             .EnableDoubleTap(_enableZoom)
-            .DefaultPage(0)
+            .SwipeHorizontal(_scrollOrientation == PdfScrollOrientation.Horizontal)
+            .DefaultPage(_defaultPage)
             .AutoSpacing(false)
             .Spacing(_pageSpacing)
             .NightMode(false)
             .FitEachPage(false)
+            .EnableAntialiasing(_enableAntialiasing)
             .OnLoad(new LoadCompleteListener(this))
             .OnPageChange(new PageChangeListener(this))
-            .OnError(new ErrorListener(this));
+            .OnError(new ErrorListener(this))
+            .OnTap(new TapListener(this))
+            .OnRender(new RenderListener(this));
+
+        // Note: UseBestQuality sets rendering quality (ARGB_8888 vs RGB_565)
+        // This is handled by the PDFView configuration automatically based on device capabilities
 
         if (_enableLinkNavigation)
         {
@@ -202,6 +258,16 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private void OnLinkTapped(LinkTappedEventArgs args)
     {
         LinkTapped?.Invoke(this, args);
+    }
+
+    private void OnTapped(int pageIndex, float x, float y)
+    {
+        Tapped?.Invoke(this, new PdfTappedEventArgs(pageIndex, x, y));
+    }
+
+    private void OnRendered(int pageCount)
+    {
+        Rendered?.Invoke(this, new RenderedEventArgs(pageCount));
     }
 
     #region Helper Methods
@@ -298,6 +364,43 @@ public class PdfViewAndroid : IPdfView, IDisposable
                 {
                     new DefaultLinkHandler(view._pdfView).HandleLinkEvent(linkTapEvent);
                 }
+            }
+        }
+    }
+
+    private class TapListener : Java.Lang.Object, IOnTapListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public TapListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public bool OnTap(MotionEvent? e)
+        {
+            if (_viewRef.TryGetTarget(out var view) && e != null)
+            {
+                view.OnTapped(view.CurrentPage, e.GetX(), e.GetY());
+            }
+            return false; // Return false to allow other gestures to process
+        }
+    }
+
+    private class RenderListener : Java.Lang.Object, IOnRenderListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public RenderListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void OnInitiallyRendered(int nbPages)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                view.OnRendered(nbPages);
             }
         }
     }

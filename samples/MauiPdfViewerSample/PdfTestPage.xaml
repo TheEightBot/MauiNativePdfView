@@ -27,6 +27,19 @@
                         Clicked="OnNextPageClicked"
                         IsEnabled="False" />
             </HorizontalStackLayout>
+
+            <!-- New Phase 4 Features -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="Orientation:" VerticalOptions="Center" />
+                <Button x:Name="ToggleOrientationButton"
+                        Text="Toggle (Vertical)"
+                        Clicked="OnToggleOrientationClicked" />
+                
+                <Label Text="Background:" VerticalOptions="Center" Margin="20,0,0,0" />
+                <Button x:Name="ToggleBackgroundButton"
+                        Text="Change"
+                        Clicked="OnToggleBackgroundClicked" />
+            </HorizontalStackLayout>
         </VerticalStackLayout>
 
         <!-- PDF Viewer -->
@@ -38,9 +51,13 @@
                          EnableZoom="True"
                          EnableSwipe="True"
                          PageSpacing="10"
+                         EnableAntialiasing="True"
+                         UseBestQuality="True"
                          DocumentLoaded="OnDocumentLoaded"
                          PageChanged="OnPageChanged"
-                         Error="OnError" />
+                         Error="OnError"
+                         Tapped="OnPdfTapped"
+                         Rendered="OnPdfRendered" />
         </Border>
 
         <!-- Status bar -->

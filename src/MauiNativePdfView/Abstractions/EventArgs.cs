@@ -105,3 +105,47 @@ public class LinkTappedEventArgs : EventArgs
         DestinationPage = destinationPage;
     }
 }
+
+/// <summary>
+/// Event arguments for PDF tapped event.
+/// </summary>
+public class PdfTappedEventArgs : EventArgs
+{
+    /// <summary>
+    /// Gets the page index where the tap occurred (0-based).
+    /// </summary>
+    public int PageIndex { get; }
+
+    /// <summary>
+    /// Gets the X coordinate of the tap (relative to page).
+    /// </summary>
+    public float X { get; }
+
+    /// <summary>
+    /// Gets the Y coordinate of the tap (relative to page).
+    /// </summary>
+    public float Y { get; }
+
+    public PdfTappedEventArgs(int pageIndex, float x, float y)
+    {
+        PageIndex = pageIndex;
+        X = x;
+        Y = y;
+    }
+}
+
+/// <summary>
+/// Event arguments for PDF rendered event.
+/// </summary>
+public class RenderedEventArgs : EventArgs
+{
+    /// <summary>
+    /// Gets the total number of pages that were rendered.
+    /// </summary>
+    public int PageCount { get; }
+
+    public RenderedEventArgs(int pageCount)
+    {
+        PageCount = pageCount;
+    }
+}
