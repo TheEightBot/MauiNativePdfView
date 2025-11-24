@@ -619,3 +619,249 @@ Examples:
 ---
 
 _This workplan is a living document and will be updated as the project progresses._
+
+---
+
+## Phase 4: Core Feature Enhancements
+
+**Branch**: `feature/core-enhancements`
+
+### Goals
+Achieve maximum feature parity between Android and iOS platforms by adding commonly supported features.
+
+### Tasks
+
+#### 4.1 Scroll Direction Control
+- [ ] Create `ScrollOrientation` enum (Vertical, Horizontal)
+- [ ] Add `ScrollOrientation` property to IPdfView interface
+- [ ] Implement in Android PdfViewAndroid (swipeHorizontal configurator)
+- [ ] Implement in iOS PdfViewiOS (DisplayDirection property)
+- [ ] Add bindable property to PdfView MAUI control
+- [ ] Update handler mappers for both platforms
+- [ ] Test horizontal and vertical scrolling modes
+- [ ] Update sample app with orientation toggle
+
+#### 4.2 Default Page Support
+- [ ] Add `DefaultPage` property to IPdfView interface
+- [ ] Implement in Android (defaultPage configurator)
+- [ ] Implement in iOS (goToPage after load)
+- [ ] Add bindable property to PdfView control
+- [ ] Update handler mappers
+- [ ] Test default page on initial load
+- [ ] Document in sample app
+
+#### 4.3 Rendering Quality Control
+- [ ] Add `EnableAntialiasing` property (Android only)
+- [ ] Add `UseBestQuality` property (RGB_565 vs ARGB_8888, Android only)
+- [ ] Implement in Android PdfViewAndroid
+- [ ] Add platform-specific documentation
+- [ ] Add bindable properties to PdfView
+- [ ] Test visual quality differences
+- [ ] Update sample app with quality toggles
+
+#### 4.4 Background Color Customization
+- [ ] Add `BackgroundColor` property to IPdfView
+- [ ] Implement in Android (view background)
+- [ ] Implement in iOS (view backgroundColor)
+- [ ] Add bindable property to PdfView
+- [ ] Update handler mappers
+- [ ] Test with various colors
+- [ ] Add color picker to sample app
+
+#### 4.5 Additional Events
+- [ ] Add `Tapped` event for single tap detection
+- [ ] Add `Rendered` event for initial render complete
+- [ ] Create TappedEventArgs class
+- [ ] Create RenderedEventArgs class
+- [ ] Implement in Android (onTap, onRender listeners)
+- [ ] Implement in iOS (tap gesture recognizer, notification)
+- [ ] Update handler event forwarding
+- [ ] Test event firing
+- [ ] Document events in sample app
+
+**Deliverables**:
+- Enhanced IPdfView interface with 5+ new properties/events
+- Cross-platform implementation of all core features
+- Updated sample app demonstrating new capabilities
+- Documentation for all new features
+
+---
+
+## Phase 5: Android-Specific Enhancements
+
+**Branch**: `feature/android-enhancements`
+
+### Goals
+Add Android-specific features that leverage AhmerPdfium's advanced capabilities.
+
+### Tasks
+
+#### 5.1 ViewPager-Style Navigation
+- [ ] Add `PageSnap` property (snap to page boundaries)
+- [ ] Add `PageFling` property (single page per fling)
+- [ ] Add `AutoSpacing` property (fit pages independently)
+- [ ] Add `FitEachPage` property (relative scaling)
+- [ ] Implement in Android PdfViewAndroid
+- [ ] Add bindable properties (Android-only attributes)
+- [ ] Test ViewPager behavior
+- [ ] Document Android-specific features
+
+#### 5.2 Mid-Level Zoom
+- [ ] Add `MidZoom` property (three-level zoom)
+- [ ] Implement in Android (setMidZoom)
+- [ ] Test zoom level transitions
+- [ ] Document zoom behavior differences
+
+#### 5.3 Night Mode
+- [ ] Add `NightMode` property
+- [ ] Implement in Android (nightMode configurator)
+- [ ] Test color inversion
+- [ ] Add toggle to sample app
+- [ ] Document as Android-only feature
+
+#### 5.4 Advanced Events
+- [ ] Add `PageScrolling` event with scroll offset
+- [ ] Add `LongPressed` event
+- [ ] Create PageScrollingEventArgs
+- [ ] Create LongPressedEventArgs
+- [ ] Implement listeners in Android
+- [ ] Update handler event forwarding
+- [ ] Test event scenarios
+
+#### 5.5 Password-Protected PDFs
+- [ ] Add `Password` property to PdfSource
+- [ ] Implement in Android (password configurator)
+- [ ] Test with encrypted PDFs
+- [ ] Handle password errors
+- [ ] Document password support
+
+**Deliverables**:
+- 10+ Android-specific enhancements
+- ViewPager-style navigation options
+- Night mode support
+- Password-protected PDF handling
+- Comprehensive documentation of platform differences
+
+---
+
+## Phase 6: iOS-Specific Enhancements
+
+**Branch**: `feature/ios-enhancements`
+
+### Goals
+Leverage iOS PdfKit's unique capabilities for enhanced iOS experience.
+
+### Tasks
+
+#### 6.1 Extended Display Modes
+- [ ] Create `DisplayMode` enum (SinglePage, SinglePageContinuous, TwoUp, TwoUpContinuous)
+- [ ] Add `DisplayMode` property to IPdfView
+- [ ] Implement in iOS PdfViewiOS
+- [ ] Update FitPolicy to DisplayMode mapping
+- [ ] Test all display modes
+- [ ] Document iOS display capabilities
+
+#### 6.2 Enhanced Document Properties
+- [ ] Add `Creator` property
+- [ ] Add `Keywords` property  
+- [ ] Add `CreationDate` property
+- [ ] Add `ModificationDate` property
+- [ ] Implement in iOS (document attributes)
+- [ ] Expose through DocumentLoadedEventArgs
+- [ ] Test metadata extraction
+- [ ] Update sample app to display properties
+
+#### 6.3 Page Labels
+- [ ] Add `GetPageLabel(int)` method
+- [ ] Implement in iOS (page label support)
+- [ ] Return custom page numbering
+- [ ] Test with documents using page labels
+- [ ] Document page label support
+
+#### 6.4 Thumbnail Support
+- [ ] Research PDFThumbnailView integration
+- [ ] Design thumbnail API
+- [ ] Add thumbnail generation methods
+- [ ] Implement in iOS
+- [ ] Create sample thumbnail viewer
+- [ ] Document thumbnail capabilities
+
+**Deliverables**:
+- Extended iOS display modes
+- Rich document metadata
+- Page label support
+- Thumbnail generation API
+- Documentation of iOS-specific features
+
+---
+
+## Phase 7: Annotation Support
+
+**Branch**: `feature/annotations`
+
+### Goals
+Enable PDF annotation rendering and interaction.
+
+### Tasks
+
+#### 7.1 Annotation Rendering
+- [ ] Add `EnableAnnotationRendering` property
+- [ ] Implement in Android (enableAnnotationRendering configurator)
+- [ ] Implement in iOS (default behavior, control visibility)
+- [ ] Test with annotated PDFs
+- [ ] Document annotation support
+
+#### 7.2 Annotation Events
+- [ ] Add `AnnotationTapped` event
+- [ ] Create AnnotationTappedEventArgs
+- [ ] Implement in both platforms
+- [ ] Get annotation type and content
+- [ ] Test annotation interaction
+- [ ] Document annotation events
+
+**Deliverables**:
+- Annotation rendering support
+- Annotation interaction events
+- Cross-platform annotation handling
+- Sample annotated PDF demonstrations
+
+---
+
+## Phase 8: Advanced Features (Future)
+
+**Branch**: `feature/advanced`
+
+### Goals
+Implement advanced PDF capabilities for power users.
+
+### Potential Features
+- Text selection and copying
+- PDF search functionality
+- Outline/bookmark navigation
+- Custom drawing overlays
+- Form field support
+- PDF creation/editing
+- Accessibility enhancements
+
+**Note**: These features require significant research and may be implemented based on user demand and feasibility analysis.
+
+---
+
+## Updated Timeline
+
+| Phase | Duration | Status |
+|-------|----------|--------|
+| Phase 1: Project Setup | 1-2 days | ✅ Complete |
+| Phase 2: Android Implementation | 2-3 days | ✅ Complete |
+| Phase 3: iOS Implementation | 2-3 days | ✅ Complete |
+| Phase 4: Core Enhancements | 2-3 days | ⏳ Planned |
+| Phase 5: Android Enhancements | 1-2 days | ⏳ Planned |
+| Phase 6: iOS Enhancements | 1-2 days | ⏳ Planned |
+| Phase 7: Annotation Support | 1 day | ⏳ Planned |
+| Phase 8: Documentation & Polish | 2-3 days | ⏳ Planned |
+| Phase 9: NuGet Package & Release | 1-2 days | ⏳ Planned |
+
+**Total Estimated Time**: 13-21 days for Phases 1-9
+**Completed**: Phases 1-3 (6-8 days)
+**Remaining**: Phases 4-9 (7-13 days)
+
