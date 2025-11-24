@@ -29,7 +29,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Auto spacing                   | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
 | Fit policy (Width/Height/Both) | ✅                    | ✅            | ✅                     | Complete                  |
 | Fit each page                  | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
-| Page snap                      | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
+| Page snap / Single page mode   | ✅                    | ✅            | ❌                     | ✅ Add (Phase 5)          |
 | Page fling                     | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
 | **Zoom & Gestures**            |                       |               |                        |                           |
 | Pinch zoom                     | ✅                    | ✅            | ✅                     | Complete                  |
@@ -114,55 +114,73 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - ✅ `RenderedEventArgs` and `Rendered` event
 - ✅ Implemented on both platforms
 
-### Phase 5: Cross-Platform Event & Interaction Enhancements (High Priority)
+### Phase 5: Display Mode & Event Enhancements (High Priority)
 
-**Branch:** `feature/events-interactions`
+**Branch:** `feature/display-events`
 
-**Goal:** Add events and interaction features that work consistently across both platforms
+**Goal:** Add display modes and interaction features that work consistently across both platforms
 
-#### 5.1 Long Press Support
+#### 5.1 Single Page Display Mode (Page Snap) ✅ **RESEARCHED - Ready to Implement**
+- Add `PdfDisplayMode` enum: `SinglePage`, `SinglePageContinuous`, `TwoUp`, `TwoUpContinuous`
+- **iOS:** Native support via `PdfDisplayMode` enum (maps directly)
+- **Android:** Approximate with `pageSnap(true)`, `pageFling(true)` configurators
+- **Implementation:** ~2-3 hours
+- **Value:** High - common user expectation for single-page viewing
+
+#### 5.2 Long Press Support
 - Add `PdfLongPressedEventArgs` with page index and coordinates
 - Add `LongPressed` event
 - **Android:** Use `onLongPress` listener
 - **iOS:** Add `UILongPressGestureRecognizer`
 - Both platforms: Consistent behavior and event args
 
-#### 5.2 Page Scrolling Event
+#### 5.3 Page Scrolling Event
 - Add `PageScrollingEventArgs` with scroll offset and direction
 - Add `PageScrolling` event
 - **Android:** Use `onPageScroll` listener with native offset
 - **iOS:** Implement using `UIScrollViewDelegate` or observation
 - Both platforms: Report scroll position consistently
 
-#### 5.3 Password-Protected PDFs
+#### 5.4 Password-Protected PDFs
 - Add `Password` property to `PdfSource`
 - Support encrypted PDFs on both platforms
 - **Android:** Use `password()` configurator
 - **iOS:** Use `PdfDocument(url, password)` constructor
 - Handle incorrect password errors gracefully
 
-### Phase 6: Visual Enhancement Parity (Medium Priority)
+### Phase 6: Night Mode (Medium Priority)
 
-**Branch:** `feature/visual-enhancements`
+**Branch:** `feature/night-mode`
 
-**Goal:** Achieve visual feature parity where reasonably possible
+**Goal:** Implement dark mode for better reading in low-light conditions
 
-#### 6.1 Night Mode / Dark Mode
+#### 6.1 Night Mode / Dark Mode ⚠️ **RESEARCHED - Proof-of-Concept Required**
 - Add `EnableNightMode` property
 - Inverts PDF colors for dark reading
-- **Android:** Use built-in `nightMode()` configurator
-- **iOS:** Implement using Core Graphics filters/blend modes
-  - Apply `CIColorInvert` filter or similar
-  - May have performance impact - document limitations
+- **Android:** Use built-in `nightMode()` configurator (native, performant)
+- **iOS:** Custom implementation using Core Graphics `CIColorInvert` filter
+  - **Implementation approaches:**
+    1. Layer-based filtering (simplest, may impact performance)
+    2. Per-page overlay with `PdfPageOverlayViewProvider` (complex, better performance)
+    3. Blend mode on superview (quick implementation)
+  - **Performance considerations:**
+    - GPU-intensive operation
+    - Battery drain on continuous use
+    - May not be as crisp as Android native
+    - Requires testing on actual devices (not just simulator)
+- **Implementation:** ~4-6 hours (mostly iOS custom work)
+- **Value:** Medium - requested feature with performance trade-offs
+- **Requirements:**
+  - Performance testing required on iOS devices
+  - Documentation of limitations and battery impact
+  - Consider optional/experimental flag initially
+  - User warning about performance on iOS
 
-#### 6.2 Display Mode Enhancements (iOS)
-- Expand `PdfDisplayMode` enum beyond current FitPolicy
-- Add: `SinglePage`, `SinglePageContinuous`, `TwoUp`, `TwoUpContinuous`
-- **iOS:** Map directly to `PdfDisplayMode` enum
-- **Android:** Map to closest equivalent behavior with configurator
-  - SinglePage: pageSnap=true, pageFling=true
-  - Continuous: existing behavior
-  - TwoUp: Not directly supported, document limitation
+**Research Notes:**
+- iOS PdfKit does not have native night mode support
+- Core Image filters (`CIColorInvert`) can invert colors but add processing overhead
+- Alternative: Could use `CIColorControls` with reduced brightness/increased contrast
+- May want to provide multiple "night mode styles" (invert, sepia, grayscale) to justify the effort
 
 ### Phase 7: Enhanced Document Metadata (Low Priority)
 
@@ -201,8 +219,18 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 ### Features We're Skipping (Out of Scope)
 
 **ViewPager-Style Android Features:**
-- ❌ `PageSnap`, `PageFling`, `AutoSpacing`, `FitEachPage`
+- ❌ `PageFling`, `AutoSpacing`
 - **Reason:** These are tightly coupled to Android's ViewPager pattern and cannot be reasonably replicated on iOS without significant custom implementation that would diverge from native iOS UX patterns
+
+**Fit Each Page Independently:**
+- ❌ `FitEachPage` - Per-page zoom levels
+- **Reason:** iOS doesn't support per-page zoom natively. Workaround would require:
+  - Listening to `PageChanged` events
+  - Calculating and setting `ScaleFactor` for each page manually
+  - Fighting with user zoom gestures
+  - Extra complexity and poor UX
+  - Global `AutoScales` property already works well for most use cases
+- **Research conclusion:** Skip - complexity doesn't justify marginal value
 
 **Platform-Specific Advanced Features:**
 - ❌ `MidZoom` (Android three-level zoom) - iOS has smooth continuous zoom
@@ -307,11 +335,34 @@ For each phase:
 | Phase | Focus | Duration | Status |
 |-------|-------|----------|--------|
 | Phase 4 | Core Enhancements | 2-3 days | ✅ Complete |
-| Phase 5 | Events & Interactions | 1-2 days | 📋 Planned |
-| Phase 6 | Visual Enhancements | 1-2 days | 📋 Planned |
+| Phase 5 | Display Mode & Events | 1-2 days | 🔬 Researched |
+| Phase 6 | Night Mode | 0.5-1 day | 🔬 Researched (POC needed) |
 | Phase 7 | Document Metadata | 0.5-1 day | 📋 Planned |
 | Phase 8 | Annotations | 1 day | 📋 Planned |
 
-**Total remaining**: ~4-6 days for Phases 5-8
+**Total remaining**: ~3.5-5 days for Phases 5-8
 **Completed**: Phase 4 (2-3 days)
-**Project total**: ~6-9 days
+**Project total**: ~5.5-8 days
+
+## Research Summary (Phase 5 & 6)
+
+### ✅ Page Snap / Single Page Mode - **FEASIBLE & EASY**
+- iOS has **native support** via `PdfDisplayMode.SinglePage`
+- Android can approximate with `pageSnap(true)` + `pageFling(true)`
+- Direct property mapping, no custom code needed
+- **Recommendation:** Implement immediately
+
+### ⚠️ Fit Each Page Independently - **SKIP**
+- iOS lacks native per-page zoom support
+- Workarounds are complex and provide poor UX
+- Conflicts with user zoom gestures
+- Global `AutoScales` is sufficient for most use cases
+- **Recommendation:** Skip this feature
+
+### ⚠️ Night Mode / Dark Mode - **FEASIBLE with Caveats**
+- Android has native `nightMode()` - works perfectly
+- iOS requires custom Core Image filter implementation
+- Performance concerns on iOS (GPU overhead, battery drain)
+- Need proof-of-concept to validate approach
+- Should document limitations clearly
+- **Recommendation:** Implement with performance warnings
