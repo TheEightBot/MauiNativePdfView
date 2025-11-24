@@ -13,6 +13,7 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 **Winner**: [AhmerPdfium](https://github.com/AhmerAfzal1/AhmerPdfium) v2.0.1 (PdfViewer) + v1.9.2 (Pdfium)
 
 **Why This Library?**
+
 - 🔄 **Maintained Fork** - Active fork of barteksc/AndroidPdfViewer with critical updates
 - ✅ **Apache 2.0 License** - Commercial-friendly
 - 🎯 **16 KB Page Size Support** - Essential for Android 15+ (mandatory as of Nov 2025)
@@ -22,6 +23,7 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 - ⚡ **API 24+** - Targets Android 7.0+ (Nougat)
 
 **Key Advantages Over Original**:
+
 - ✅ **Fixed first-page rendering bug** - Resolved incomplete rendering when first page height is small
 - ✅ **16 KB page size compliance** - Required for modern Android devices and Google Play
 - ✅ **Better snap page behavior** - Improved zooming and offset calculations
@@ -29,6 +31,7 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 - ✅ **Maven Central availability** - Easier integration than JitPack
 
 **Key Features**:
+
 - ✅ Load from file, URL, stream, bytes, assets
 - ✅ Pinch-to-zoom + double-tap zoom
 - ✅ Link handling (internal + external)
@@ -39,6 +42,7 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 - ✅ Night mode support
 
 **Tradeoffs**:
+
 - 📦 ~16MB app size increase (native libs)
 - 📝 ProGuard rules needed: `-keep class com.ahmer.pdfium.** { *; }`
 - 🔄 Requires .NET binding maintenance
@@ -51,6 +55,7 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 **Framework**: Apple's native PDFKit (system framework)
 
 **Why PDFKit?**
+
 - 🍎 **Built-in** - No external dependencies
 - 🎯 **Zero Size Impact** - System framework
 - ⚡ **Native Performance** - Optimized by Apple
@@ -58,6 +63,7 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 - 🔧 **Feature-Rich** - Annotations, search, thumbnails
 
 **Key Features**:
+
 - ✅ All document loading methods
 - ✅ Native zoom gestures
 - ✅ Built-in link handling
@@ -86,11 +92,13 @@ MauiNativePdfView/
 ### Immediate Actions Required:
 
 1. **Review the Workplan** 📖
+
    - Read [WORKPLAN.md](WORKPLAN.md) in detail
    - Understand the 7-phase approach
    - Review timeline estimates (3-5 weeks)
 
 2. **Approve Phase 1** ✅
+
    - Confirm project structure
    - Confirm technology choices
    - Provide any feedback
@@ -106,12 +114,14 @@ MauiNativePdfView/
 ## 📋 7-Phase Development Plan
 
 ### Phase 1: Project Setup & Infrastructure (2-3 days)
+
 - Solution structure
 - Android binding project setup
 - MAUI library project setup
 - Initial project configuration
 
 ### Phase 2: Android Native Wrapper (4-5 days)
+
 - Interface design
 - Android wrapper implementation
 - PDF loading from all sources
@@ -119,29 +129,34 @@ MauiNativePdfView/
 - Event handling
 
 ### Phase 3: iOS Native Wrapper (4-5 days)
+
 - iOS wrapper implementation
 - PDFKit integration
 - Feature parity with Android
 - Platform-specific optimizations
 
 ### Phase 4: MAUI Control & API (3-4 days)
+
 - PdfView control
 - Bindable properties
 - Event system
 - Cross-platform consistency
 
 ### Phase 5: Sample Application (2-3 days)
+
 - Demo app with all features
 - Sample PDF files
 - Usage examples
 
 ### Phase 6: Documentation & Polish (2-3 days)
+
 - API documentation
 - Usage guides
 - Performance optimization
 - Code quality
 
 ### Phase 7: NuGet Package & Release (1-2 days)
+
 - Package configuration
 - NuGet publishing
 - Release artifacts
@@ -152,7 +167,7 @@ MauiNativePdfView/
 
 ```csharp
 // Simple and intuitive API
-<pdf:PdfView 
+<pdf:PdfView
     Source="{Binding PdfSource}"
     EnableZoom="True"
     EnableLinkNavigation="True"
@@ -172,11 +187,13 @@ pdfViewer.Source = PdfSource.FromResource("embedded.pdf");
 ## 🔧 Technical Stack
 
 ### .NET & MAUI
+
 - **.NET**: 8+ or 9
 - **MAUI**: Latest stable workload
 - **Language**: C#
 
 ### Android
+
 - **Library**: AhmerPdfium v2.0.1 (PdfViewer) + v1.9.2 (Pdfium Core)
 - **Maven**: io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1
 - **Min SDK**: API 24 (Android 7.0)
@@ -184,6 +201,7 @@ pdfViewer.Source = PdfSource.FromResource("embedded.pdf");
 - **Build Tools**: AGP 8.13.0+
 
 ### iOS
+
 - **Framework**: PDFKit (system)
 - **Min Version**: iOS 11.0
 - **Target Version**: iOS 17.0+
@@ -206,6 +224,7 @@ pdfViewer.Source = PdfSource.FromResource("embedded.pdf");
 ## 📞 Checkpoint System
 
 Before each phase transition:
+
 1. ✅ Complete all phase tasks
 2. 📝 Document any issues or blockers
 3. 🧪 Test completed functionality
@@ -221,6 +240,7 @@ Before each phase transition:
 **Next Action**: Create `feature/project-setup` branch and begin implementation
 
 Would you like to:
+
 - A) Proceed with Phase 1 implementation
 - B) Review/modify the workplan
 - C) Discuss specific concerns
@@ -236,5 +256,5 @@ Would you like to:
 
 ---
 
-*Project initialized: November 24, 2025*  
-*Timeline: 3-5 weeks estimated for v1.0.0*
+_Project initialized: November 24, 2025_  
+_Timeline: 3-5 weeks estimated for v1.0.0_
