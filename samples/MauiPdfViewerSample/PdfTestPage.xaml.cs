@@ -133,4 +133,12 @@ public partial class PdfTestPage : ContentPage
         ToggleDisplayModeButton.Text = _displayModeNames[_displayModeIndex];
         StatusLabel.Text = $"Display mode: {_displayModeNames[_displayModeIndex]}";
     }
+
+    // Night Mode POC (iOS only)
+    private void OnToggleNightModeClicked(object? sender, EventArgs e)
+    {
+        PdfViewer.NightMode = !PdfViewer.NightMode;
+        ToggleNightModeButton.Text = PdfViewer.NightMode ? "On (iOS only)" : "Off (iOS only)";
+        StatusLabel.Text = $"Night mode: {(PdfViewer.NightMode ? "Enabled" : "Disabled")} - POC using Core Image filters";
+    }
 }

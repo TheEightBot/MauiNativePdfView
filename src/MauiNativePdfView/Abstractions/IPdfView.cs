@@ -91,6 +91,12 @@ public interface IPdfView
     Color? BackgroundColor { get; set; }
 
     /// <summary>
+    /// Gets or sets whether night/dark mode is enabled (inverts colors for comfortable night reading, iOS only).
+    /// Performance note: This uses Core Image filters which may impact rendering performance on older devices.
+    /// </summary>
+    bool NightMode { get; set; }
+
+    /// <summary>
     /// Occurs when the document has finished loading.
     /// </summary>
     event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;

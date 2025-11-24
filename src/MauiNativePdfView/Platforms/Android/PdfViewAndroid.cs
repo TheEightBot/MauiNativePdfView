@@ -167,6 +167,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
+    // NightMode is iOS-only feature (uses Core Image filters)
+    // On Android, this property is present for cross-platform compatibility but has no effect
+    public bool NightMode { get; set; } = false;
+
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
     public event EventHandler<PageChangedEventArgs>? PageChanged;
     public event EventHandler<PdfErrorEventArgs>? Error;

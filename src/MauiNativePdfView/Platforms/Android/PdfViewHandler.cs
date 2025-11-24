@@ -33,6 +33,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
         [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
+        [nameof(PdfView.NightMode)] = MapNightMode,
     };
 
     /// <summary>
@@ -72,7 +73,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
     protected override void ConnectHandler(PDFView platformView)
     {
         base.ConnectHandler(platformView);
-
+        
         // Apply initial values
         MapSource(this, VirtualView);
         MapEnableZoom(this, VirtualView);
@@ -88,6 +89,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         MapEnableAntialiasing(this, VirtualView);
         MapUseBestQuality(this, VirtualView);
         MapBackgroundColor(this, VirtualView);
+        MapNightMode(this, VirtualView);
     }
 
     protected override void DisconnectHandler(PDFView platformView)
@@ -260,6 +262,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.BackgroundColor = view.BackgroundColor;
+        }
+    }
+
+    private static void MapNightMode(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.NightMode = view.NightMode;
         }
     }
 

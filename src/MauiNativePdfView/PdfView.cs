@@ -159,6 +159,16 @@ public class PdfView : View
             null);
 
     /// <summary>
+    /// Bindable property for night mode (iOS only).
+    /// </summary>
+    public static readonly BindableProperty NightModeProperty =
+        BindableProperty.Create(
+            nameof(NightMode),
+            typeof(bool),
+            typeof(PdfView),
+            false);
+
+    /// <summary>
     /// Gets or sets the PDF source to display.
     /// </summary>
     public PdfSource? Source
@@ -291,6 +301,16 @@ public class PdfView : View
     {
         get => (Color?)GetValue(BackgroundColorProperty);
         set => SetValue(BackgroundColorProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether night/dark mode is enabled (iOS only).
+    /// Performance note: This uses Core Image filters which may impact rendering performance.
+    /// </summary>
+    public bool NightMode
+    {
+        get => (bool)GetValue(NightModeProperty);
+        set => SetValue(NightModeProperty, value);
     }
 
     /// <summary>

@@ -47,6 +47,11 @@
                 <Button x:Name="ToggleDisplayModeButton"
                         Text="Single Page Continuous"
                         Clicked="OnToggleDisplayModeClicked" />
+                
+                <Label Text="Night Mode:" VerticalOptions="Center" Margin="20,0,0,0" />
+                <Button x:Name="ToggleNightModeButton"
+                        Text="Off (iOS only)"
+                        Clicked="OnToggleNightModeClicked" />
             </HorizontalStackLayout>
         </VerticalStackLayout>
 

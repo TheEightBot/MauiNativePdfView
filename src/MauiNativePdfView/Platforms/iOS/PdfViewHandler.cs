@@ -27,7 +27,8 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         [nameof(PdfView.DefaultPage)] = MapDefaultPage,
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
-        [nameof(PdfView.BackgroundColor)] = MapBackgroundColor
+        [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
+        [nameof(PdfView.NightMode)] = MapNightMode
     };
 
     public static CommandMapper<PdfView, PdfViewHandler> CommandMapper = new(ViewCommandMapper)
@@ -82,6 +83,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
             _pdfViewWrapper.EnableAntialiasing = VirtualView.EnableAntialiasing;
             _pdfViewWrapper.UseBestQuality = VirtualView.UseBestQuality;
             _pdfViewWrapper.BackgroundColor = VirtualView.BackgroundColor;
+            _pdfViewWrapper.NightMode = VirtualView.NightMode;
         }
     }
 
@@ -249,6 +251,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.BackgroundColor = view.BackgroundColor;
+        }
+    }
+
+    public static void MapNightMode(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.NightMode = view.NightMode;
         }
     }
 

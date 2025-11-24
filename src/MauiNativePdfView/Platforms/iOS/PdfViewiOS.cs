@@ -2,6 +2,7 @@ using MauiNativePdfView.Abstractions;
 using PdfKit;
 using UIKit;
 using Foundation;
+using CoreImage;
 
 namespace MauiNativePdfView.Platforms.iOS;
 
@@ -206,6 +207,42 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
     }
 
+    private bool _nightMode = false;
+
+    public bool NightMode
+    {
+        get => _nightMode;
+        set
+        {
+            if (_nightMode != value)
+            {
+                _nightMode = value;
+                ApplyNightMode();
+            }
+        }
+    }
+
+    private void ApplyNightMode()
+    {
+        // POC: Apply Core Image color invert filter to invert PDF colors
+        // This creates a dark mode effect by inverting the document colors
+        // NOTE: This may impact performance, especially on older devices
+        if (_nightMode)
+        {
+            // Create a CIColorInvert filter
+            var filter = new CIColorInvert();
+            
+            // Apply the filter to the PDF view
+            // This inverts all colors, making white backgrounds black and black text white
+            _pdfView.Layer.Filters = new CIFilter[] { filter };
+        }
+        else
+        {
+            // Remove filters to restore normal rendering
+            _pdfView.Layer.Filters = null;
+        }
+    }
+
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
     public event EventHandler<PageChangedEventArgs>? PageChanged;
     public event EventHandler<PdfErrorEventArgs>? Error;
@@ -363,7 +400,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     {
         var location = recognizer.LocationInView(_pdfView);
         var pageIndex = CurrentPage;
-
+        
         // Convert location to page coordinates
         var page = _pdfView.CurrentPage;
         if (page != null)
