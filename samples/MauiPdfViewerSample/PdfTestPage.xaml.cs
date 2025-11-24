@@ -13,6 +13,22 @@ public partial class PdfTestPage : ContentPage
         Colors.Beige
     };
 
+    private int _displayModeIndex = 0;
+    private readonly PdfDisplayMode[] _displayModes = new[]
+    {
+        PdfDisplayMode.SinglePageContinuous,
+        PdfDisplayMode.SinglePage,
+        PdfDisplayMode.TwoUpContinuous,
+        PdfDisplayMode.TwoUp
+    };
+    private readonly string[] _displayModeNames = new[]
+    {
+        "Single Page Continuous",
+        "Single Page",
+        "Two-Up Continuous",
+        "Two-Up"
+    };
+
     public PdfTestPage()
     {
         InitializeComponent();
@@ -23,7 +39,7 @@ public partial class PdfTestPage : ContentPage
         try
         {
             StatusLabel.Text = "Loading PDF...";
-
+            
             // Load from raw asset
             PdfViewer.Source = PdfSource.FromAsset("sample.pdf");
         }
@@ -107,5 +123,14 @@ public partial class PdfTestPage : ContentPage
         _backgroundColorIndex = (_backgroundColorIndex + 1) % _backgroundColors.Length;
         PdfViewer.BackgroundColor = _backgroundColors[_backgroundColorIndex];
         StatusLabel.Text = $"Background color: {_backgroundColors[_backgroundColorIndex]}";
+    }
+
+    // New Phase 5 event handler
+    private void OnToggleDisplayModeClicked(object? sender, EventArgs e)
+    {
+        _displayModeIndex = (_displayModeIndex + 1) % _displayModes.Length;
+        PdfViewer.DisplayMode = _displayModes[_displayModeIndex];
+        ToggleDisplayModeButton.Text = _displayModeNames[_displayModeIndex];
+        StatusLabel.Text = $"Display mode: {_displayModeNames[_displayModeIndex]}";
     }
 }
