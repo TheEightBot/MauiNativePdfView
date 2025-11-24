@@ -1,40 +1,40 @@
 using MauiNativePdfView.Abstractions;
-using PDFKit;
+using PdfKit;
 using UIKit;
 using Foundation;
 
 namespace MauiNativePdfView.Platforms.iOS;
 
 /// <summary>
-/// iOS implementation of IPdfView using PDFKit's PDFView.
+/// iOS implementation of IPdfView using PdfKit's PdfView.
 /// </summary>
 public class PdfViewiOS : IPdfView, IDisposable
 {
-    private readonly PDFView _pdfView;
+    private readonly PdfKit.PdfView _pdfView;
     private PdfSource? _source;
     private bool _disposed;
     private NSObject? _pageChangedObserver;
 
     public PdfViewiOS()
     {
-        _pdfView = new PDFView
+        _pdfView = new PdfKit.PdfView
         {
             AutoScales = true,
-            DisplayMode = PDFDisplayMode.SinglePageContinuous,
-            DisplayDirection = PDFDisplayDirection.Vertical
+            DisplayMode = PdfDisplayMode.SinglePageContinuous,
+            DisplayDirection = PdfDisplayDirection.Vertical
         };
 
         // Subscribe to page change notifications
         _pageChangedObserver = NSNotificationCenter.DefaultCenter.AddObserver(
-            PDFView.PageChangedNotification,
+            PdfKit.PdfView.PageChangedNotification,
             OnPageChangedNotification,
             _pdfView);
     }
 
     /// <summary>
-    /// Gets the native PDFView instance.
+    /// Gets the native PdfView instance.
     /// </summary>
-    public PDFView NativeView => _pdfView;
+    public PdfKit.PdfView NativeView => _pdfView;
 
     public PdfSource? Source
     {
@@ -47,10 +47,10 @@ public class PdfViewiOS : IPdfView, IDisposable
     }
 
     public int CurrentPage => _pdfView.Document != null && _pdfView.CurrentPage != null
-        ? (int)_pdfView.Document.GetIndexForPage(_pdfView.CurrentPage)
+        ? (int)_pdfView.Document.GetPageIndex(_pdfView.CurrentPage)
         : 0;
 
-    public int PageCount => _pdfView.Document?.PageCount ?? 0;
+    public int PageCount => _pdfView.Document != null ? (int)_pdfView.Document.PageCount : 0;
 
     public bool EnableZoom
     {
@@ -107,11 +107,11 @@ public class PdfViewiOS : IPdfView, IDisposable
             {
                 case FitPolicy.Width:
                     _pdfView.AutoScales = true;
-                    _pdfView.DisplayMode = PDFDisplayMode.SinglePageContinuous;
+                    _pdfView.DisplayMode = PdfDisplayMode.SinglePageContinuous;
                     break;
                 case FitPolicy.Height:
                     _pdfView.AutoScales = true;
-                    _pdfView.DisplayMode = PDFDisplayMode.SinglePage;
+                    _pdfView.DisplayMode = PdfDisplayMode.SinglePage;
                     break;
                 case FitPolicy.Both:
                     _pdfView.AutoScales = false;
@@ -133,7 +133,7 @@ public class PdfViewiOS : IPdfView, IDisposable
         if (pageIndex < 0 || pageIndex >= PageCount)
             return;
 
-        var page = _pdfView.Document.GetPage((nuint)pageIndex);
+        var page = _pdfView.Document.GetPage((nint)pageIndex);
         if (page != null)
         {
             _pdfView.GoToPage(page);
@@ -155,18 +155,18 @@ public class PdfViewiOS : IPdfView, IDisposable
 
         try
         {
-            PDFDocument? document = null;
+            PdfDocument? document = null;
 
             switch (_source)
             {
                 case FilePdfSource fileSource:
                     var fileUrl = NSUrl.FromFilename(fileSource.FilePath);
-                    document = new PDFDocument(fileUrl);
+                    document = new PdfDocument(fileUrl);
                     break;
 
                 case UriPdfSource uriSource:
                     var url = new NSUrl(uriSource.Uri.AbsoluteUri);
-                    document = new PDFDocument(url);
+                    document = new PdfDocument(url);
                     break;
 
                 case StreamPdfSource streamSource:
@@ -174,13 +174,13 @@ public class PdfViewiOS : IPdfView, IDisposable
                     {
                         streamSource.Stream.CopyTo(memoryStream);
                         var data = NSData.FromArray(memoryStream.ToArray());
-                        document = new PDFDocument(data);
+                        document = new PdfDocument(data);
                     }
                     break;
 
                 case BytesPdfSource bytesSource:
                     var bytesData = NSData.FromArray(bytesSource.Data);
-                    document = new PDFDocument(bytesData);
+                    document = new PdfDocument(bytesData);
                     break;
 
                 case AssetPdfSource assetSource:
@@ -188,7 +188,7 @@ public class PdfViewiOS : IPdfView, IDisposable
                     if (File.Exists(assetPath))
                     {
                         var assetUrl = NSUrl.FromFilename(assetPath);
-                        document = new PDFDocument(assetUrl);
+                        document = new PdfDocument(assetUrl);
                     }
                     else
                     {
@@ -196,11 +196,11 @@ public class PdfViewiOS : IPdfView, IDisposable
                         var resourcePath = NSBundle.MainBundle.PathForResource(
                             Path.GetFileNameWithoutExtension(assetSource.AssetName),
                             Path.GetExtension(assetSource.AssetName));
-                        
+
                         if (!string.IsNullOrEmpty(resourcePath))
                         {
                             var resourceUrl = NSUrl.FromFilename(resourcePath);
-                            document = new PDFDocument(resourceUrl);
+                            document = new PdfDocument(resourceUrl);
                         }
                     }
                     break;
@@ -211,13 +211,13 @@ public class PdfViewiOS : IPdfView, IDisposable
                 _pdfView.Document = document;
 
                 // Get document metadata
-                var pageCount = document.PageCount;
-                var title = document.DocumentAttributes?[PDFDocumentAttribute.TitleAttribute]?.ToString();
-                var author = document.DocumentAttributes?[PDFDocumentAttribute.AuthorAttribute]?.ToString();
-                var subject = document.DocumentAttributes?[PDFDocumentAttribute.SubjectAttribute]?.ToString();
+                var pageCount = (int)document.PageCount;
+                var title = document.DocumentAttributes?["Title"]?.ToString();
+                var author = document.DocumentAttributes?["Author"]?.ToString();
+                var subject = document.DocumentAttributes?["Subject"]?.ToString();
 
                 DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(
-                    (int)pageCount,
+                    pageCount,
                     title,
                     author,
                     subject));
@@ -240,7 +240,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     {
         if (_pdfView.Document != null && _pdfView.CurrentPage != null)
         {
-            var pageIndex = (int)_pdfView.Document.GetIndexForPage(_pdfView.CurrentPage);
+            var pageIndex = (int)_pdfView.Document.GetPageIndex(_pdfView.CurrentPage);
             var pageCount = (int)_pdfView.Document.PageCount;
 
             PageChanged?.Invoke(this, new PageChangedEventArgs(pageIndex, pageCount));

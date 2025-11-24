@@ -1,13 +1,13 @@
 using Microsoft.Maui.Handlers;
 using MauiNativePdfView.Abstractions;
-using PDFKit;
+using PdfKit;
 
 namespace MauiNativePdfView.Platforms.iOS;
 
 /// <summary>
-/// iOS handler for PdfView control using PDFKit.
+/// iOS handler for PdfView control using PdfKit.
 /// </summary>
-public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
+public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
 {
     private PdfViewiOS? _pdfViewWrapper;
 
@@ -39,7 +39,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
     {
     }
 
-    protected override PDFView CreatePlatformView()
+    protected override PdfKit.PdfView CreatePlatformView()
     {
         _pdfViewWrapper = new PdfViewiOS();
 
@@ -52,7 +52,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         return _pdfViewWrapper.NativeView;
     }
 
-    protected override void ConnectHandler(PDFView platformView)
+    protected override void ConnectHandler(PdfKit.PdfView platformView)
     {
         base.ConnectHandler(platformView);
 
@@ -71,7 +71,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         }
     }
 
-    protected override void DisconnectHandler(PDFView platformView)
+    protected override void DisconnectHandler(PdfKit.PdfView platformView)
     {
         if (_pdfViewWrapper != null)
         {
