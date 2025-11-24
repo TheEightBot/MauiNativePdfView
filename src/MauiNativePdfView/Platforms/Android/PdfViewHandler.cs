@@ -27,6 +27,11 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         [nameof(PdfView.MaxZoom)] = MapMaxZoom,
         [nameof(PdfView.PageSpacing)] = MapPageSpacing,
         [nameof(PdfView.FitPolicy)] = MapFitPolicy,
+        [nameof(PdfView.ScrollOrientation)] = MapScrollOrientation,
+        [nameof(PdfView.DefaultPage)] = MapDefaultPage,
+        [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
+        [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
+        [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
     };
 
     /// <summary>
@@ -57,6 +62,8 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         _pdfViewWrapper.PageChanged += OnPageChanged;
         _pdfViewWrapper.Error += OnError;
         _pdfViewWrapper.LinkTapped += OnLinkTapped;
+        _pdfViewWrapper.Tapped += OnTapped;
+        _pdfViewWrapper.Rendered += OnRendered;
 
         return _pdfViewWrapper.NativeView;
     }
@@ -74,6 +81,11 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         MapMaxZoom(this, VirtualView);
         MapPageSpacing(this, VirtualView);
         MapFitPolicy(this, VirtualView);
+        MapScrollOrientation(this, VirtualView);
+        MapDefaultPage(this, VirtualView);
+        MapEnableAntialiasing(this, VirtualView);
+        MapUseBestQuality(this, VirtualView);
+        MapBackgroundColor(this, VirtualView);
     }
 
     protected override void DisconnectHandler(PDFView platformView)
@@ -84,6 +96,8 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
             _pdfViewWrapper.PageChanged -= OnPageChanged;
             _pdfViewWrapper.Error -= OnError;
             _pdfViewWrapper.LinkTapped -= OnLinkTapped;
+            _pdfViewWrapper.Tapped -= OnTapped;
+            _pdfViewWrapper.Rendered -= OnRendered;
             _pdfViewWrapper.Dispose();
             _pdfViewWrapper = null;
         }
@@ -111,6 +125,16 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
     private void OnLinkTapped(object? sender, LinkTappedEventArgs e)
     {
         VirtualView?.RaiseLinkTapped(e);
+    }
+
+    private void OnTapped(object? sender, PdfTappedEventArgs e)
+    {
+        VirtualView?.RaiseTapped(e);
+    }
+
+    private void OnRendered(object? sender, RenderedEventArgs e)
+    {
+        VirtualView?.RaiseRendered(e);
     }
 
     #endregion
@@ -186,6 +210,46 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.FitPolicy = view.FitPolicy;
+        }
+    }
+
+    private static void MapScrollOrientation(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.ScrollOrientation = view.ScrollOrientation;
+        }
+    }
+
+    private static void MapDefaultPage(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.DefaultPage = view.DefaultPage;
+        }
+    }
+
+    private static void MapEnableAntialiasing(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.EnableAntialiasing = view.EnableAntialiasing;
+        }
+    }
+
+    private static void MapUseBestQuality(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.UseBestQuality = view.UseBestQuality;
+        }
+    }
+
+    private static void MapBackgroundColor(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.BackgroundColor = view.BackgroundColor;
         }
     }
 

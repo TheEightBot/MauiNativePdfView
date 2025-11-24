@@ -99,6 +99,56 @@ public class PdfView : View
             FitPolicy.Width);
 
     /// <summary>
+    /// Bindable property for scroll orientation.
+    /// </summary>
+    public static readonly BindableProperty ScrollOrientationProperty =
+        BindableProperty.Create(
+            nameof(ScrollOrientation),
+            typeof(PdfScrollOrientation),
+            typeof(PdfView),
+            PdfScrollOrientation.Vertical);
+
+    /// <summary>
+    /// Bindable property for default page.
+    /// </summary>
+    public static readonly BindableProperty DefaultPageProperty =
+        BindableProperty.Create(
+            nameof(DefaultPage),
+            typeof(int),
+            typeof(PdfView),
+            0);
+
+    /// <summary>
+    /// Bindable property for enabling antialiasing.
+    /// </summary>
+    public static readonly BindableProperty EnableAntialiasingProperty =
+        BindableProperty.Create(
+            nameof(EnableAntialiasing),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
+    /// Bindable property for using best quality rendering.
+    /// </summary>
+    public static readonly BindableProperty UseBestQualityProperty =
+        BindableProperty.Create(
+            nameof(UseBestQuality),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
+    /// Bindable property for background color.
+    /// </summary>
+    public static readonly BindableProperty BackgroundColorProperty =
+        BindableProperty.Create(
+            nameof(BackgroundColor),
+            typeof(Color),
+            typeof(PdfView),
+            null);
+
+    /// <summary>
     /// Gets or sets the PDF source to display.
     /// </summary>
     public PdfSource? Source
@@ -180,6 +230,51 @@ public class PdfView : View
     }
 
     /// <summary>
+    /// Gets or sets the scroll direction for page navigation.
+    /// </summary>
+    public PdfScrollOrientation ScrollOrientation
+    {
+        get => (PdfScrollOrientation)GetValue(ScrollOrientationProperty);
+        set => SetValue(ScrollOrientationProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the default page to display when the document loads (0-based).
+    /// </summary>
+    public int DefaultPage
+    {
+        get => (int)GetValue(DefaultPageProperty);
+        set => SetValue(DefaultPageProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether antialiasing is enabled (Android only, iOS always uses antialiasing).
+    /// </summary>
+    public bool EnableAntialiasing
+    {
+        get => (bool)GetValue(EnableAntialiasingProperty);
+        set => SetValue(EnableAntialiasingProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether to use best quality rendering (Android only).
+    /// </summary>
+    public bool UseBestQuality
+    {
+        get => (bool)GetValue(UseBestQualityProperty);
+        set => SetValue(UseBestQualityProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the background color of the PDF viewer.
+    /// </summary>
+    public new Color? BackgroundColor
+    {
+        get => (Color?)GetValue(BackgroundColorProperty);
+        set => SetValue(BackgroundColorProperty, value);
+    }
+
+    /// <summary>
     /// Gets the current page number (0-based).
     /// </summary>
     public int CurrentPage { get; internal set; }
@@ -208,6 +303,16 @@ public class PdfView : View
     /// Occurs when a link is tapped.
     /// </summary>
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
+
+    /// <summary>
+    /// Occurs when the PDF is tapped (single tap).
+    /// </summary>
+    public event EventHandler<PdfTappedEventArgs>? Tapped;
+
+    /// <summary>
+    /// Occurs when the PDF has finished rendering for the first time.
+    /// </summary>
+    public event EventHandler<RenderedEventArgs>? Rendered;
 
     /// <summary>
     /// Navigates to the specified page.
@@ -246,6 +351,16 @@ public class PdfView : View
     internal void RaiseLinkTapped(LinkTappedEventArgs args)
     {
         LinkTapped?.Invoke(this, args);
+    }
+
+    internal void RaiseTapped(PdfTappedEventArgs args)
+    {
+        Tapped?.Invoke(this, args);
+    }
+
+    internal void RaiseRendered(RenderedEventArgs args)
+    {
+        Rendered?.Invoke(this, args);
     }
 
     private static void OnSourceChanged(BindableObject bindable, object oldValue, object newValue)

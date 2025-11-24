@@ -61,6 +61,31 @@ public interface IPdfView
     FitPolicy FitPolicy { get; set; }
 
     /// <summary>
+    /// Gets or sets the scroll direction for page navigation.
+    /// </summary>
+    PdfScrollOrientation ScrollOrientation { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default page to display when the document loads (0-based index).
+    /// </summary>
+    int DefaultPage { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether antialiasing is enabled for rendering (Android only, iOS always uses antialiasing).
+    /// </summary>
+    bool EnableAntialiasing { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to use best quality rendering (ARGB_8888 vs RGB_565, Android only).
+    /// </summary>
+    bool UseBestQuality { get; set; }
+
+    /// <summary>
+    /// Gets or sets the background color of the PDF viewer.
+    /// </summary>
+    Color? BackgroundColor { get; set; }
+
+    /// <summary>
     /// Occurs when the document has finished loading.
     /// </summary>
     event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
@@ -79,6 +104,16 @@ public interface IPdfView
     /// Occurs when a link is tapped in the PDF.
     /// </summary>
     event EventHandler<LinkTappedEventArgs>? LinkTapped;
+
+    /// <summary>
+    /// Occurs when the PDF is tapped (single tap).
+    /// </summary>
+    event EventHandler<PdfTappedEventArgs>? Tapped;
+
+    /// <summary>
+    /// Occurs when the PDF has finished rendering for the first time.
+    /// </summary>
+    event EventHandler<RenderedEventArgs>? Rendered;
 
     /// <summary>
     /// Navigates to the specified page.
