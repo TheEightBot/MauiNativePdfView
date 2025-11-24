@@ -1,0 +1,258 @@
+using MauiNativePdfView.Abstractions;
+
+namespace MauiNativePdfView;
+
+/// <summary>
+/// Cross-platform PDF viewer control for .NET MAUI.
+/// </summary>
+public class PdfView : View
+{
+    /// <summary>
+    /// Bindable property for the PDF source.
+    /// </summary>
+    public static readonly BindableProperty SourceProperty =
+        BindableProperty.Create(
+            nameof(Source),
+            typeof(PdfSource),
+            typeof(PdfView),
+            null,
+            propertyChanged: OnSourceChanged);
+
+    /// <summary>
+    /// Bindable property for enabling zoom gestures.
+    /// </summary>
+    public static readonly BindableProperty EnableZoomProperty =
+        BindableProperty.Create(
+            nameof(EnableZoom),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
+    /// Bindable property for enabling swipe gestures.
+    /// </summary>
+    public static readonly BindableProperty EnableSwipeProperty =
+        BindableProperty.Create(
+            nameof(EnableSwipe),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
+    /// Bindable property for enabling link navigation.
+    /// </summary>
+    public static readonly BindableProperty EnableLinkNavigationProperty =
+        BindableProperty.Create(
+            nameof(EnableLinkNavigation),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
+    /// Bindable property for zoom level.
+    /// </summary>
+    public static readonly BindableProperty ZoomProperty =
+        BindableProperty.Create(
+            nameof(Zoom),
+            typeof(float),
+            typeof(PdfView),
+            1.0f);
+
+    /// <summary>
+    /// Bindable property for minimum zoom level.
+    /// </summary>
+    public static readonly BindableProperty MinZoomProperty =
+        BindableProperty.Create(
+            nameof(MinZoom),
+            typeof(float),
+            typeof(PdfView),
+            1.0f);
+
+    /// <summary>
+    /// Bindable property for maximum zoom level.
+    /// </summary>
+    public static readonly BindableProperty MaxZoomProperty =
+        BindableProperty.Create(
+            nameof(MaxZoom),
+            typeof(float),
+            typeof(PdfView),
+            3.0f);
+
+    /// <summary>
+    /// Bindable property for page spacing.
+    /// </summary>
+    public static readonly BindableProperty PageSpacingProperty =
+        BindableProperty.Create(
+            nameof(PageSpacing),
+            typeof(int),
+            typeof(PdfView),
+            10);
+
+    /// <summary>
+    /// Bindable property for fit policy.
+    /// </summary>
+    public static readonly BindableProperty FitPolicyProperty =
+        BindableProperty.Create(
+            nameof(FitPolicy),
+            typeof(FitPolicy),
+            typeof(PdfView),
+            FitPolicy.Width);
+
+    /// <summary>
+    /// Gets or sets the PDF source to display.
+    /// </summary>
+    public PdfSource? Source
+    {
+        get => (PdfSource?)GetValue(SourceProperty);
+        set => SetValue(SourceProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether zoom gestures are enabled.
+    /// </summary>
+    public bool EnableZoom
+    {
+        get => (bool)GetValue(EnableZoomProperty);
+        set => SetValue(EnableZoomProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether swipe gestures are enabled.
+    /// </summary>
+    public bool EnableSwipe
+    {
+        get => (bool)GetValue(EnableSwipeProperty);
+        set => SetValue(EnableSwipeProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether link navigation is enabled.
+    /// </summary>
+    public bool EnableLinkNavigation
+    {
+        get => (bool)GetValue(EnableLinkNavigationProperty);
+        set => SetValue(EnableLinkNavigationProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the current zoom level (1.0 = 100%).
+    /// </summary>
+    public float Zoom
+    {
+        get => (float)GetValue(ZoomProperty);
+        set => SetValue(ZoomProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the minimum zoom level.
+    /// </summary>
+    public float MinZoom
+    {
+        get => (float)GetValue(MinZoomProperty);
+        set => SetValue(MinZoomProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the maximum zoom level.
+    /// </summary>
+    public float MaxZoom
+    {
+        get => (float)GetValue(MaxZoomProperty);
+        set => SetValue(MaxZoomProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the spacing between pages in pixels.
+    /// </summary>
+    public int PageSpacing
+    {
+        get => (int)GetValue(PageSpacingProperty);
+        set => SetValue(PageSpacingProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets how pages should fit on screen.
+    /// </summary>
+    public FitPolicy FitPolicy
+    {
+        get => (FitPolicy)GetValue(FitPolicyProperty);
+        set => SetValue(FitPolicyProperty, value);
+    }
+
+    /// <summary>
+    /// Gets the current page number (0-based).
+    /// </summary>
+    public int CurrentPage { get; internal set; }
+
+    /// <summary>
+    /// Gets the total number of pages in the document.
+    /// </summary>
+    public int PageCount { get; internal set; }
+
+    /// <summary>
+    /// Occurs when the document has finished loading.
+    /// </summary>
+    public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
+
+    /// <summary>
+    /// Occurs when the current page changes.
+    /// </summary>
+    public event EventHandler<PageChangedEventArgs>? PageChanged;
+
+    /// <summary>
+    /// Occurs when an error occurs.
+    /// </summary>
+    public event EventHandler<PdfErrorEventArgs>? Error;
+
+    /// <summary>
+    /// Occurs when a link is tapped.
+    /// </summary>
+    public event EventHandler<LinkTappedEventArgs>? LinkTapped;
+
+    /// <summary>
+    /// Navigates to the specified page.
+    /// </summary>
+    public void GoToPage(int pageIndex)
+    {
+        Handler?.Invoke(nameof(IPdfView.GoToPage), pageIndex);
+    }
+
+    /// <summary>
+    /// Reloads the current document.
+    /// </summary>
+    public void Reload()
+    {
+        Handler?.Invoke(nameof(IPdfView.Reload));
+    }
+
+    internal void RaiseDocumentLoaded(DocumentLoadedEventArgs args)
+    {
+        PageCount = args.PageCount;
+        DocumentLoaded?.Invoke(this, args);
+    }
+
+    internal void RaisePageChanged(PageChangedEventArgs args)
+    {
+        CurrentPage = args.PageIndex;
+        PageCount = args.PageCount;
+        PageChanged?.Invoke(this, args);
+    }
+
+    internal void RaiseError(PdfErrorEventArgs args)
+    {
+        Error?.Invoke(this, args);
+    }
+
+    internal void RaiseLinkTapped(LinkTappedEventArgs args)
+    {
+        LinkTapped?.Invoke(this, args);
+    }
+
+    private static void OnSourceChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is PdfView view && view.Handler != null)
+        {
+            view.Handler.UpdateValue(nameof(Source));
+        }
+    }
+}
