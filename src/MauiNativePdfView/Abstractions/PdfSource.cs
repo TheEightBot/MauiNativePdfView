@@ -6,6 +6,12 @@ namespace MauiNativePdfView.Abstractions;
 public abstract class PdfSource
 {
     /// <summary>
+    /// Gets or sets the password for encrypted PDF documents.
+    /// Leave null or empty for non-encrypted PDFs.
+    /// </summary>
+    public string? Password { get; set; }
+
+    /// <summary>
     /// Creates a PDF source from a file path.
     /// </summary>
     public static PdfSource FromFile(string filePath)

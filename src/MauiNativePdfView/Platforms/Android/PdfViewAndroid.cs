@@ -271,6 +271,12 @@ public class PdfViewAndroid : IPdfView, IDisposable
         bool enablePageSnap = _displayMode == Abstractions.PdfDisplayMode.SinglePage;
         bool enablePageFling = _displayMode == Abstractions.PdfDisplayMode.SinglePage;
 
+        // Set password if provided
+        if (!string.IsNullOrEmpty(_source?.Password))
+        {
+            configurator.Password(_source.Password);
+        }
+
         configurator
             .EnableSwipe(_enableSwipe)
             .EnableDoubleTap(_enableZoom)

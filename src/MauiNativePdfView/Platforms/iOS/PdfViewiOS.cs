@@ -292,6 +292,25 @@ public class PdfViewiOS : IPdfView, IDisposable
 
             if (document != null)
             {
+                // Check if document is locked and attempt to unlock with password
+                if (document.IsLocked)
+                {
+                    if (!string.IsNullOrEmpty(_source.Password))
+                    {
+                        bool unlocked = document.Unlock(_source.Password);
+                        if (!unlocked)
+                        {
+                            OnError(new PdfErrorEventArgs("Failed to unlock PDF: incorrect password"));
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        OnError(new PdfErrorEventArgs("PDF is password-protected but no password was provided"));
+                        return;
+                    }
+                }
+
                 _pdfView.Document = document;
 
                 // Get document metadata
@@ -353,6 +372,11 @@ public class PdfViewiOS : IPdfView, IDisposable
 
             PageChanged?.Invoke(this, new PageChangedEventArgs(pageIndex, pageCount));
         }
+    }
+
+    private void OnError(PdfErrorEventArgs args)
+    {
+        Error?.Invoke(this, args);
     }
 
     private void HandleTap(UITapGestureRecognizer recognizer)
