@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Enable trim analyzers for Android class libraries.
+      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
+    -->
+    <IsTrimmable>true</IsTrimmable>
+    
+    <!-- Package Information -->
+    <PackageId>MauiNativePdfView.Android.Binding</PackageId>
+    <Version>1.0.0-alpha1</Version>
+    <Authors>Your Name</Authors>
+    <Description>.NET Android binding for AhmerPdfium - A maintained PDF viewer library with 16 KB page size support</Description>
+    <PackageProjectUrl>https://github.com/YourUsername/MauiNativePdfView</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/YourUsername/MauiNativePdfView</RepositoryUrl>
+    <PackageTags>maui;android;pdf;pdfviewer;binding;ahmer-pdfium</PackageTags>
+    
+    <!--
+      AAR files in the Jars directory are automatically included.
+      AhmerPdfium v1.9.2 and AhmerPdfViewer v2.0.1
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Explicitly declare AAR files for clarity -->
+    <AndroidLibrary Include="Jars\ahmer-pdfium-1.9.2.aar" />
+    <AndroidLibrary Include="Jars\ahmer-pdfviewer-2.0.1.aar" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Kotlin standard library dependency -->
+    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.1.0" />
+  </ItemGroup>
+</Project>
