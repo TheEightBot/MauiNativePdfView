@@ -46,7 +46,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Background color               | ✅                    | ✅            | ✅                     | ✅ Phase 4 Complete       |
 | **Annotations & Rendering**    |                       |               |                        |                           |
 | Annotation rendering           | ✅                    | ✅ (default)  | ❌                     | ✅ To Add (Phase 7)       |
-| Password protection            | ✅                    | ✅            | ❌                     | ✅ To Add (Phase 5)       |
+| Password protection            | ✅                    | ✅            | ✅                     | ✅ Phase 5.2 Complete     |
 | Custom drawing (onDraw)        | ✅                    | ✅            | ❌                     | **Advanced Feature**      |
 | Custom drawing all pages       | ✅                    | ✅            | ❌                     | **Advanced Feature**      |
 | **Navigation & Events**        |                       |               |                        |                           |
@@ -131,12 +131,13 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - ✅ Removed TwoUp modes (not well-supported on Android)
 - ✅ Merged to main (commit bb5d68d)
 
-#### 5.2 Password-Protected PDFs
-- Add `Password` property to `PdfSource`
-- Support encrypted PDFs on both platforms
-- **Android:** Use `password()` configurator
-- **iOS:** Use `PdfDocument(url, password)` constructor
-- Handle incorrect password errors gracefully
+#### 5.2 Password-Protected PDFs ✅ **COMPLETE**
+- ✅ Added `Password` property to `PdfSource` base class
+- ✅ Support for encrypted PDFs on both platforms
+- ✅ **Android:** Use `.password()` configurator
+- ✅ **iOS:** Use `PdfDocument.Unlock()` method with `IsLocked` check
+- ✅ Graceful error handling for incorrect/missing passwords
+- ✅ Merged to main (commit ee2eed9)
 
 ### Phase 6: Enhanced Document Metadata (Low Priority)
 
@@ -310,11 +311,11 @@ For each phase:
 |-------|-------|----------|--------|
 | Phase 4 | Core Enhancements | 2-3 days | ✅ Complete |
 | Phase 5.1 | Display Mode | 0.5 days | ✅ Complete |
-| Phase 5.2 | Password Support | 0.5 days | 📋 Planned |
+| Phase 5.2 | Password Support | 0.5 days | ✅ Complete |
 | Phase 6 | Document Metadata | 0.5-1 day | 📋 Planned |
 | Phase 7 | Annotations | 1 day | 📋 Planned |
 
-**Total remaining**: ~2-2.5 days for remaining phases
+**Total remaining**: ~1.5-2 days for remaining phases
 **Note:** Night Mode feature removed from scope after extensive research and implementation attempts
 **Completed**: Phase 4 (2-3 days)
 **Project total**: ~5.5-8 days
