@@ -26,7 +26,8 @@
 - [ ] Wire up event handlers
 - [ ] Testing and validation
 
-**Status**: Not Started
+**Status**: Not Started  
+**Note**: Using AhmerPdfium (v2.0.1) - maintained fork with 16KB page size support and bug fixes
 
 ---
 

@@ -8,30 +8,41 @@ Your .NET MAUI PDF viewer library project is ready to begin development.
 
 ## 📊 Research Summary
 
-### Android Library Selection: ✅ AndroidPdfViewer
+### Android Library Selection: ✅ AhmerPdfium
 
-**Winner**: [AndroidPdfViewer](https://github.com/DImuthuUpe/AndroidPdfViewer) v3.2.0-beta.1
+**Winner**: [AhmerPdfium](https://github.com/AhmerAfzal1/AhmerPdfium) v2.0.1 (PdfViewer) + v1.9.2 (Pdfium)
 
 **Why This Library?**
-- 🌟 **8,400+ stars** - Most popular Android PDF library
+- 🔄 **Maintained Fork** - Active fork of barteksc/AndroidPdfViewer with critical updates
 - ✅ **Apache 2.0 License** - Commercial-friendly
-- 🔄 **Active Maintenance** - Recent Android 15 compliance updates
-- 📦 **Complete Feature Set** - All requirements met
-- 🎯 **Battle-Tested** - Used in production apps worldwide
-- 🔧 **Easy Binding** - Well-structured API for .NET bindings
+- 🎯 **16 KB Page Size Support** - Essential for Android 15+ (mandatory as of Nov 2025)
+- 🐛 **Bug Fixes** - Resolves first-page rendering issues from original library
+- 📦 **Maven Central** - Published to Maven Central for easy dependency management
+- 🔧 **Kotlin-based** - Modern Kotlin implementation
+- ⚡ **API 24+** - Targets Android 7.0+ (Nougat)
+
+**Key Advantages Over Original**:
+- ✅ **Fixed first-page rendering bug** - Resolved incomplete rendering when first page height is small
+- ✅ **16 KB page size compliance** - Required for modern Android devices and Google Play
+- ✅ **Better snap page behavior** - Improved zooming and offset calculations
+- ✅ **Active maintenance** - Recent updates and community support
+- ✅ **Maven Central availability** - Easier integration than JitPack
 
 **Key Features**:
 - ✅ Load from file, URL, stream, bytes, assets
 - ✅ Pinch-to-zoom + double-tap zoom
 - ✅ Link handling (internal + external)
-- ✅ Multiple page fit policies
+- ✅ Multiple page fit policies (WIDTH, HEIGHT, BOTH)
 - ✅ Gesture-based navigation
-- ✅ Google Play compliant (16 KB page size)
+- ✅ Page snapping and fling support
+- ✅ Annotation rendering
+- ✅ Night mode support
 
 **Tradeoffs**:
 - 📦 ~16MB app size increase (native libs)
-- 📝 ProGuard rules needed
+- 📝 ProGuard rules needed: `-keep class com.ahmer.pdfium.** { *; }`
 - 🔄 Requires .NET binding maintenance
+- 📱 API 24+ minimum (Android 7.0+)
 
 ---
 
@@ -166,8 +177,9 @@ pdfViewer.Source = PdfSource.FromResource("embedded.pdf");
 - **Language**: C#
 
 ### Android
-- **Library**: AndroidPdfViewer 3.2.0-beta.1
-- **Min SDK**: API 21 (Android 5.0)
+- **Library**: AhmerPdfium v2.0.1 (PdfViewer) + v1.9.2 (Pdfium Core)
+- **Maven**: io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1
+- **Min SDK**: API 24 (Android 7.0)
 - **Target SDK**: API 35 (Android 15)
 - **Build Tools**: AGP 8.13.0+
 

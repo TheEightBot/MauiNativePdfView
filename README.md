@@ -14,7 +14,7 @@ This project is currently under active development. See [WORKPLAN.md](WORKPLAN.m
 MauiNativePdfView provides a unified API for displaying PDF documents in .NET MAUI applications using native platform controls:
 
 - **iOS**: PDFKit framework (system native)
-- **Android**: AndroidPdfViewer library (based on PdfiumAndroid)
+- **Android**: AhmerPdfium library (maintained fork with 16KB page size support)
 
 ## ✨ Planned Features
 
@@ -103,12 +103,14 @@ pdfViewer.Source = PdfSource.FromStream(stream);
 ## 🔧 Technical Details
 
 ### Android Implementation
-- **Library**: AndroidPdfViewer 3.2.0-beta.1
-- **Base**: PdfiumAndroid for native rendering
-- **Min SDK**: Android 5.0 (API 21)
+- **Library**: AhmerPdfium 2.0.1 + 1.9.2
+- **Maven**: io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1
+- **Base**: Enhanced PdfiumAndroid with 16 KB page size support
+- **Min SDK**: Android 7.0 (API 24)
 - **Target SDK**: Android 15 (API 35)
 - **License**: Apache 2.0
 - **Size Impact**: ~16MB (native libraries)
+- **Key Fix**: First-page rendering bug resolved
 
 ### iOS Implementation
 - **Framework**: PDFKit (system framework)
@@ -161,7 +163,8 @@ The underlying libraries have the following licenses:
 
 ## 🙏 Acknowledgments
 
-- [AndroidPdfViewer](https://github.com/DImuthuUpe/AndroidPdfViewer) by barteksc/DImuthuUpe
+- [AhmerPdfium](https://github.com/AhmerAfzal1/AhmerPdfium) by Ahmer Afzal (maintained fork)
+- [AndroidPdfViewer](https://github.com/DImuthuUpe/AndroidPdfViewer) by barteksc/DImuthuUpe (original)
 - Apple's PDFKit framework
 - .NET MAUI team
 

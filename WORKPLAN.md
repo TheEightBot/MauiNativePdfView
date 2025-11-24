@@ -16,28 +16,36 @@ A .NET MAUI PDF viewer library that wraps native PDF controls for iOS (PDFKit) a
   - Full Apple ecosystem support
 
 ### Android Implementation
-- **Selected Library**: AndroidPdfViewer (barteksc/DImuthuUpe fork)
-- **Repository**: https://github.com/DImuthuUpe/AndroidPdfViewer
-- **Version**: 3.2.0-beta.1 (latest with 16 KB page size support for Android 15+)
-- **Statistics**: 8.4k stars, Apache 2.0 license, actively maintained
+- **Selected Library**: AhmerPdfium (maintained fork of barteksc/AndroidPdfViewer)
+- **Repository**: https://github.com/AhmerAfzal1/AhmerPdfium
+- **Versions**: 
+  - PdfViewer: v2.0.1 (`io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1`)
+  - Pdfium Core: v1.9.2 (`io.github.ahmerafzal1:ahmer-pdfium:1.9.2`)
+- **Statistics**: 24 stars (newer fork), Apache 2.0 license, actively maintained
 - **Key Features**:
-  - Based on PdfiumAndroid for native rendering
+  - Based on enhanced PdfiumAndroid with 16 KB page size support
   - Pinch-to-zoom, double-tap zoom
   - Link handling with DefaultLinkHandler
   - Multiple document sources (Uri, File, bytes, Stream, Asset)
   - Page fit policies (WIDTH, HEIGHT, BOTH)
-  - Swipe navigation, page snapping
+  - Swipe navigation, page snapping with improved behavior
   - Annotation rendering
+  - Night mode support
+  - **Fixed first-page rendering bug** from original library
   - Google Play compliant for 16 KB page sizes (required Nov 1, 2025)
+  - Published to Maven Central
 
-**Why AndroidPdfViewer**:
-1. Most popular and mature Android PDF library for .NET bindings
-2. Comprehensive feature set matching our requirements
-3. Active maintenance with recent Android 15 compliance updates
-4. Apache 2.0 license compatible with commercial use
-5. Well-documented API surface
-6. Proven track record in production apps
-7. Support for all required document sources
+**Why AhmerPdfium**:
+1. **Critical bug fixes** - Resolves first-page rendering issues in original library
+2. **16 KB page size support** - Essential for Android 15+ and Google Play requirements
+3. **Active maintenance** - Recent updates specifically for modern Android
+4. **Maven Central** - Professional distribution, easier than JitPack
+5. **Kotlin-based** - Modern, maintainable codebase
+6. Comprehensive feature set matching all requirements
+7. Apache 2.0 license compatible with commercial use
+8. Built on proven AndroidPdfViewer foundation
+9. Support for all required document sources
+10. API 24+ minimum provides access to modern Android features
 
 ## Project Structure
 ```
@@ -71,16 +79,15 @@ MauiNativePdfView/
   - [ ] Create README.md with project description
   - [ ] Create LICENSE file (choose appropriate license)
 
-- [ ] Create Android binding project
+  - [ ] Create Android binding project
   - [ ] Create MauiNativePdfView.Android.Binding project using `dotnet new android-bindinglib`
-  - [ ] Download AndroidPdfViewer 3.2.0-beta.1 AAR from Maven/JitPack
-  - [ ] Add AAR file to binding project with AndroidLibrary build action
+  - [ ] Download AhmerPdfViewer 2.0.1 AAR from Maven Central
+  - [ ] Download AhmerPdfium 1.9.2 AAR from Maven Central
+  - [ ] Add AAR files to binding project with AndroidLibrary build action
   - [ ] Configure Java dependency verification
   - [ ] Add metadata transforms if needed for API conflicts
   - [ ] Build and verify binding generation
-  - [ ] Document any binding issues in BINDING_NOTES.md
-
-- [ ] Create main MAUI library project
+  - [ ] Document any binding issues in BINDING_NOTES.md- [ ] Create main MAUI library project
   - [ ] Create MauiNativePdfView project using `dotnet new mauilib`
   - [ ] Configure multi-targeting (iOS, Android)
   - [ ] Set up platform-specific folders
@@ -474,9 +481,9 @@ Examples:
 - MAUI Workload: Latest stable
 
 ### Android
-- AndroidPdfViewer: 3.2.0-beta.1
-- PdfiumAndroid: ~1.9.0 (transitive)
-- Minimum Android SDK: API 21 (Android 5.0)
+- AhmerPdfViewer: 2.0.1 (`io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1`)
+- AhmerPdfium: 1.9.2 (`io.github.ahmerafzal1:ahmer-pdfium:1.9.2`)
+- Minimum Android SDK: API 24 (Android 7.0)
 - Target Android SDK: API 35 (Android 15)
 - Build Tools: AGP 8.13.0+
 - NDK: r28+
@@ -519,11 +526,14 @@ Examples:
 ## Notes & Considerations
 
 ### Android Considerations
-- AndroidPdfViewer uses PdfiumAndroid which adds ~16MB to app size (native libraries for multiple architectures)
+- AhmerPdfium uses enhanced PdfiumAndroid which adds ~16MB to app size (native libraries for multiple architectures)
 - Consider APK splitting for production apps to reduce size
-- 16 KB page size support is required for Google Play as of Nov 1, 2025 (already supported in 3.2.0-beta.1)
-- ProGuard rules may be needed: `-keep class com.shockwave.**`
+- 16 KB page size support is required for Google Play as of Nov 1, 2025 (fully supported in AhmerPdfium)
+- ProGuard rules required: `-keep class com.ahmer.pdfium.** { *; }`
 - Cannot load PDFs directly from URLs; must download first
+- API 24+ minimum (Android 7.0+) - 99%+ of devices as of 2025
+- First-page rendering bug from original library is fixed
+- Search functionality is implemented (highlighting in progress)
 
 ### iOS Considerations
 - PDFKit is a system framework (no size overhead)
@@ -546,10 +556,12 @@ Examples:
 - Monitor memory usage during testing
 
 ### Maintenance Considerations
-- AndroidPdfViewer binding will need updates when library updates
+- AhmerPdfium binding will need updates when library updates
+- Monitor AhmerAfzal1/AhmerPdfium repository for updates
 - Keep up with .NET MAUI updates
 - Monitor for Android/iOS SDK changes
 - Plan for breaking changes in major versions
+- Library is actively maintained with recent commits
 
 ---
 
