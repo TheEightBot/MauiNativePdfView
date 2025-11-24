@@ -29,7 +29,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Auto spacing                   | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
 | Fit policy (Width/Height/Both) | ✅                    | ✅            | ✅                     | Complete                  |
 | Fit each page                  | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
-| Page snap / Single page mode   | ✅                    | ✅            | ❌                     | ✅ Add (Phase 5)          |
+| Page snap / Single page mode   | ✅                    | ✅            | ✅                     | ✅ Phase 5.1 Complete     |
 | Page fling                     | ✅                    | ❌            | ❌                     | ❌ Skip (ViewPager-only)  |
 | **Zoom & Gestures**            |                       |               |                        |                           |
 | Pinch zoom                     | ✅                    | ✅            | ✅                     | Complete                  |
@@ -38,7 +38,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Mid zoom level                 | ✅                    | ❌            | ❌                     | ⚠️ Android-only            |
 | Enable/disable zoom            | ✅                    | ✅            | ✅                     | Complete                  |
 | Enable/disable swipe           | ✅                    | ✅            | ✅                     | Complete                  |
-| Long press                     | ✅                    | ❌            | ❌                     | ✅ Add with gesture       |
+| Long press                     | ✅                    | ❌            | ❌                     | ❌ Skip (not critical)    |
 | **Visual Enhancements**        |                       |               |                        |                           |
 | Night mode / Dark mode         | ✅                    | ❌            | ❌                     | ❌ Removed (iOS incompatible) |
 | Antialiasing                   | ✅                    | ✅ (default)  | ✅                     | ✅ Phase 4 Complete       |
@@ -57,9 +57,9 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Page filter/order              | ✅                    | ❌            | ❌                     | ❌ Skip (complex)         |
 | OnLoad callback                | ✅                    | ✅            | ✅                     | Complete                  |
 | OnPageChange                   | ✅                    | ✅            | ✅                     | Complete                  |
-| OnPageScroll                   | ✅                    | ❌            | ❌                     | ✅ Add with scroll events |
+| OnPageScroll                   | ✅                    | ❌            | ❌                     | ❌ Skip (not critical)    |
 | OnTap                          | ✅                    | ✅            | ✅                     | ✅ Phase 4 Complete       |
-| OnLongPress                    | ✅                    | ❌            | ❌                     | ✅ Add with gesture       |
+| OnLongPress                    | ✅                    | ❌            | ❌                     | ❌ Skip (not critical)    |
 | OnRender                       | ✅                    | ✅            | ✅                     | ✅ Phase 4 Complete       |
 | **Links & Interaction**        |                       |               |                        |                           |
 | Link navigation                | ✅                    | ✅            | ✅                     | Complete                  |
@@ -131,21 +131,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - ✅ Removed TwoUp modes (not well-supported on Android)
 - ✅ Merged to main (commit bb5d68d)
 
-#### 5.2 Long Press Support
-- Add `PdfLongPressedEventArgs` with page index and coordinates
-- Add `LongPressed` event
-- **Android:** Use `onLongPress` listener
-- **iOS:** Add `UILongPressGestureRecognizer`
-- Both platforms: Consistent behavior and event args
-
-#### 5.3 Page Scrolling Event
-- Add `PageScrollingEventArgs` with scroll offset and direction
-- Add `PageScrolling` event
-- **Android:** Use `onPageScroll` listener with native offset
-- **iOS:** Implement using `UIScrollViewDelegate` or observation
-- Both platforms: Report scroll position consistently
-
-#### 5.4 Password-Protected PDFs
+#### 5.2 Password-Protected PDFs
 - Add `Password` property to `PdfSource`
 - Support encrypted PDFs on both platforms
 - **Android:** Use `password()` configurator
@@ -215,6 +201,10 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - **Root cause:** PdfKit's PdfView renders directly to graphics context, bypassing the CALayer compositing pipeline where filters would be applied
 - **Conclusion:** Cross-platform night mode not feasible without major architectural changes. Removed from project scope.
 - **Alternative:** Users can use system-wide dark mode or accessibility features
+
+**Event & Gesture Features:**
+- ❌ Long press support - Not critical for core PDF viewing functionality
+- ❌ Page scrolling events - Not critical, PageChanged event is sufficient for most use cases
 
 **Platform-Specific Advanced Features:**
 - ❌ `MidZoom` (Android three-level zoom) - iOS has smooth continuous zoom
@@ -320,11 +310,11 @@ For each phase:
 |-------|-------|----------|--------|
 | Phase 4 | Core Enhancements | 2-3 days | ✅ Complete |
 | Phase 5.1 | Display Mode | 0.5 days | ✅ Complete |
-| Phase 5.2-5.4 | Events & Password Support | 1-1.5 days | 📋 Planned |
+| Phase 5.2 | Password Support | 0.5 days | 📋 Planned |
 | Phase 6 | Document Metadata | 0.5-1 day | 📋 Planned |
 | Phase 7 | Annotations | 1 day | 📋 Planned |
 
-**Total remaining**: ~2.5-3.5 days for remaining phases
+**Total remaining**: ~2-2.5 days for remaining phases
 **Note:** Night Mode feature removed from scope after extensive research and implementation attempts
 **Completed**: Phase 4 (2-3 days)
 **Project total**: ~5.5-8 days
