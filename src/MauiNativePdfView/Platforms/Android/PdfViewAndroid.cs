@@ -110,25 +110,57 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public int PageSpacing
     {
         get => _pageSpacing;
-        set => _pageSpacing = value;
+        set
+        {
+            if (_pageSpacing != value)
+            {
+                _pageSpacing = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
     }
 
     public Abstractions.FitPolicy FitPolicy
     {
         get => _fitPolicy;
-        set => _fitPolicy = value;
+        set
+        {
+            if (_fitPolicy != value)
+            {
+                _fitPolicy = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
     }
 
     public Abstractions.PdfDisplayMode DisplayMode
     {
         get => _displayMode;
-        set => _displayMode = value;
+        set
+        {
+            if (_displayMode != value)
+            {
+                _displayMode = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
     }
 
     public PdfScrollOrientation ScrollOrientation
     {
         get => _scrollOrientation;
-        set => _scrollOrientation = value;
+        set
+        {
+            if (_scrollOrientation != value)
+            {
+                _scrollOrientation = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
     }
 
     public int DefaultPage
@@ -140,13 +172,29 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public bool EnableAntialiasing
     {
         get => _enableAntialiasing;
-        set => _enableAntialiasing = value;
+        set
+        {
+            if (_enableAntialiasing != value)
+            {
+                _enableAntialiasing = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
     }
 
     public bool UseBestQuality
     {
         get => _useBestQuality;
-        set => _useBestQuality = value;
+        set
+        {
+            if (_useBestQuality != value)
+            {
+                _useBestQuality = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
     }
 
     public Color? BackgroundColor
