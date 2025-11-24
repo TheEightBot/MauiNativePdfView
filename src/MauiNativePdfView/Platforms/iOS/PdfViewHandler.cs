@@ -22,6 +22,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         [nameof(PdfView.MaxZoom)] = MapMaxZoom,
         [nameof(PdfView.PageSpacing)] = MapPageSpacing,
         [nameof(PdfView.FitPolicy)] = MapFitPolicy,
+        [nameof(PdfView.DisplayMode)] = MapDisplayMode,
         [nameof(PdfView.ScrollOrientation)] = MapScrollOrientation,
         [nameof(PdfView.DefaultPage)] = MapDefaultPage,
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
@@ -75,6 +76,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
             _pdfViewWrapper.MaxZoom = VirtualView.MaxZoom;
             _pdfViewWrapper.PageSpacing = VirtualView.PageSpacing;
             _pdfViewWrapper.FitPolicy = VirtualView.FitPolicy;
+            _pdfViewWrapper.DisplayMode = VirtualView.DisplayMode;
             _pdfViewWrapper.ScrollOrientation = VirtualView.ScrollOrientation;
             _pdfViewWrapper.DefaultPage = VirtualView.DefaultPage;
             _pdfViewWrapper.EnableAntialiasing = VirtualView.EnableAntialiasing;
@@ -199,6 +201,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.FitPolicy = view.FitPolicy;
+        }
+    }
+
+    public static void MapDisplayMode(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.DisplayMode = view.DisplayMode;
         }
     }
 

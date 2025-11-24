@@ -40,6 +40,14 @@
                         Text="Change"
                         Clicked="OnToggleBackgroundClicked" />
             </HorizontalStackLayout>
+
+            <!-- New Phase 5 Features -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="Display Mode:" VerticalOptions="Center" />
+                <Button x:Name="ToggleDisplayModeButton"
+                        Text="Single Page Continuous"
+                        Clicked="OnToggleDisplayModeClicked" />
+            </HorizontalStackLayout>
         </VerticalStackLayout>
 
         <!-- PDF Viewer -->

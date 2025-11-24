@@ -35,7 +35,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Pinch zoom                     | ✅                    | ✅            | ✅                     | Complete                  |
 | Double tap zoom                | ✅                    | ✅            | ✅                     | Complete                  |
 | Min/Max zoom                   | ✅                    | ✅            | ✅                     | Complete                  |
-| Mid zoom level                 | ✅                    | ❌            | ❌                     | ⚠️ Android-only            |
+| Mid zoom level                 | ✅                    | ❌            | ❌                     | ⚠️ Android-only           |
 | Enable/disable zoom            | ✅                    | ✅            | ✅                     | Complete                  |
 | Enable/disable swipe           | ✅                    | ✅            | ✅                     | Complete                  |
 | Long press                     | ✅                    | ❌            | ❌                     | ✅ Add with gesture       |
@@ -63,7 +63,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | OnRender                       | ✅                    | ✅            | ✅                     | ✅ Phase 4 Complete       |
 | **Links & Interaction**        |                       |               |                        |                           |
 | Link navigation                | ✅                    | ✅            | ✅                     | Complete                  |
-| Custom link handler            | ✅                    | ❌            | ❌                     | ⚠️ Android-only            |
+| Custom link handler            | ✅                    | ❌            | ❌                     | ⚠️ Android-only           |
 | LinkTapped event               | ✅                    | ✅            | ✅                     | Complete                  |
 | **UI Components**              |                       |               |                        |                           |
 | Scroll handle                  | ✅                    | ✅ (built-in) | ❌                     | ❌ Skip (platform UX)     |
@@ -91,25 +91,30 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 **Status:** ✅ Fully implemented and tested on both platforms
 
 #### 4.1 Scroll Direction Control ✅
+
 - ✅ Created `PdfScrollOrientation` enum (Vertical, Horizontal)
 - ✅ Android: `swipeHorizontal` configurator
 - ✅ iOS: `DisplayDirection` property
 - ✅ MAUI control with bindable property
 
 #### 4.2 Default Page ✅
+
 - ✅ `DefaultPage` property for initial page on load
 - ✅ Android: `defaultPage` configurator
 - ✅ iOS: `goToPage` after document loads
 
 #### 4.3 Rendering Quality ✅
+
 - ✅ `EnableAntialiasing` property (Android-specific, iOS always on)
 - ✅ `UseBestQuality` property (Android ARGB_8888, iOS always on)
 
 #### 4.4 Background Color ✅
+
 - ✅ `BackgroundColor` property with full Color support
 - ✅ Implemented on both platforms
 
 #### 4.5 Additional Events ✅
+
 - ✅ `PdfTappedEventArgs` and `Tapped` event
 - ✅ `RenderedEventArgs` and `Rendered` event
 - ✅ Implemented on both platforms
@@ -121,6 +126,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 **Goal:** Add display modes and interaction features that work consistently across both platforms
 
 #### 5.1 Single Page Display Mode (Page Snap) ✅ **RESEARCHED - Ready to Implement**
+
 - Add `PdfDisplayMode` enum: `SinglePage`, `SinglePageContinuous`, `TwoUp`, `TwoUpContinuous`
 - **iOS:** Native support via `PdfDisplayMode` enum (maps directly)
 - **Android:** Approximate with `pageSnap(true)`, `pageFling(true)` configurators
@@ -128,6 +134,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - **Value:** High - common user expectation for single-page viewing
 
 #### 5.2 Long Press Support
+
 - Add `PdfLongPressedEventArgs` with page index and coordinates
 - Add `LongPressed` event
 - **Android:** Use `onLongPress` listener
@@ -135,6 +142,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - Both platforms: Consistent behavior and event args
 
 #### 5.3 Page Scrolling Event
+
 - Add `PageScrollingEventArgs` with scroll offset and direction
 - Add `PageScrolling` event
 - **Android:** Use `onPageScroll` listener with native offset
@@ -142,6 +150,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - Both platforms: Report scroll position consistently
 
 #### 5.4 Password-Protected PDFs
+
 - Add `Password` property to `PdfSource`
 - Support encrypted PDFs on both platforms
 - **Android:** Use `password()` configurator
@@ -155,6 +164,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 **Goal:** Implement dark mode for better reading in low-light conditions
 
 #### 6.1 Night Mode / Dark Mode ⚠️ **RESEARCHED - Proof-of-Concept Required**
+
 - Add `EnableNightMode` property
 - Inverts PDF colors for dark reading
 - **Android:** Use built-in `nightMode()` configurator (native, performant)
@@ -177,6 +187,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
   - User warning about performance on iOS
 
 **Research Notes:**
+
 - iOS PdfKit does not have native night mode support
 - Core Image filters (`CIColorInvert`) can invert colors but add processing overhead
 - Alternative: Could use `CIColorControls` with reduced brightness/increased contrast
@@ -189,6 +200,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 **Goal:** Expose richer document metadata across platforms
 
 #### 7.1 Extended Document Properties
+
 - Add properties to `DocumentLoadedEventArgs`:
   - `Creator` (string)
   - `Keywords` (string)
@@ -206,12 +218,14 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 **Goal:** Enable PDF annotation rendering and basic interaction
 
 #### 8.1 Annotation Rendering
+
 - Add `EnableAnnotationRendering` property
 - Render PDF annotations, forms, comments
 - **Android:** Use `enableAnnotationRendering()` configurator
 - **iOS:** Enabled by default, add toggle if possible
 
 #### 8.2 Annotation Events
+
 - Add `AnnotationTappedEventArgs` with annotation details
 - Add `AnnotationTapped` event
 - Both platforms: Report annotation type and content
@@ -219,10 +233,12 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 ### Features We're Skipping (Out of Scope)
 
 **ViewPager-Style Android Features:**
+
 - ❌ `PageFling`, `AutoSpacing`
 - **Reason:** These are tightly coupled to Android's ViewPager pattern and cannot be reasonably replicated on iOS without significant custom implementation that would diverge from native iOS UX patterns
 
 **Fit Each Page Independently:**
+
 - ❌ `FitEachPage` - Per-page zoom levels
 - **Reason:** iOS doesn't support per-page zoom natively. Workaround would require:
   - Listening to `PageChanged` events
@@ -233,6 +249,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - **Research conclusion:** Skip - complexity doesn't justify marginal value
 
 **Platform-Specific Advanced Features:**
+
 - ❌ `MidZoom` (Android three-level zoom) - iOS has smooth continuous zoom
 - ❌ Custom link handlers (Android) - Would require complex iOS implementation
 - ❌ Scroll handles (both) - Platform-specific UI components
@@ -332,13 +349,13 @@ For each phase:
 
 ## Updated Timeline Estimate
 
-| Phase | Focus | Duration | Status |
-|-------|-------|----------|--------|
-| Phase 4 | Core Enhancements | 2-3 days | ✅ Complete |
-| Phase 5 | Display Mode & Events | 1-2 days | 🔬 Researched |
-| Phase 6 | Night Mode | 0.5-1 day | 🔬 Researched (POC needed) |
-| Phase 7 | Document Metadata | 0.5-1 day | 📋 Planned |
-| Phase 8 | Annotations | 1 day | 📋 Planned |
+| Phase   | Focus                 | Duration  | Status                     |
+| ------- | --------------------- | --------- | -------------------------- |
+| Phase 4 | Core Enhancements     | 2-3 days  | ✅ Complete                |
+| Phase 5 | Display Mode & Events | 1-2 days  | 🔬 Researched              |
+| Phase 6 | Night Mode            | 0.5-1 day | 🔬 Researched (POC needed) |
+| Phase 7 | Document Metadata     | 0.5-1 day | 📋 Planned                 |
+| Phase 8 | Annotations           | 1 day     | 📋 Planned                 |
 
 **Total remaining**: ~3.5-5 days for Phases 5-8
 **Completed**: Phase 4 (2-3 days)
@@ -347,12 +364,14 @@ For each phase:
 ## Research Summary (Phase 5 & 6)
 
 ### ✅ Page Snap / Single Page Mode - **FEASIBLE & EASY**
+
 - iOS has **native support** via `PdfDisplayMode.SinglePage`
 - Android can approximate with `pageSnap(true)` + `pageFling(true)`
 - Direct property mapping, no custom code needed
 - **Recommendation:** Implement immediately
 
 ### ⚠️ Fit Each Page Independently - **SKIP**
+
 - iOS lacks native per-page zoom support
 - Workarounds are complex and provide poor UX
 - Conflicts with user zoom gestures
@@ -360,6 +379,7 @@ For each phase:
 - **Recommendation:** Skip this feature
 
 ### ⚠️ Night Mode / Dark Mode - **FEASIBLE with Caveats**
+
 - Android has native `nightMode()` - works perfectly
 - iOS requires custom Core Image filter implementation
 - Performance concerns on iOS (GPU overhead, battery drain)

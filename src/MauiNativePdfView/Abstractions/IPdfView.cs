@@ -61,6 +61,11 @@ public interface IPdfView
     FitPolicy FitPolicy { get; set; }
 
     /// <summary>
+    /// Gets or sets the display mode for PDF pages (single page, continuous, two-up, etc.).
+    /// </summary>
+    PdfDisplayMode DisplayMode { get; set; }
+
+    /// <summary>
     /// Gets or sets the scroll direction for page navigation.
     /// </summary>
     PdfScrollOrientation ScrollOrientation { get; set; }

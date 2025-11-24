@@ -99,6 +99,16 @@ public class PdfView : View
             FitPolicy.Width);
 
     /// <summary>
+    /// Bindable property for display mode.
+    /// </summary>
+    public static readonly BindableProperty DisplayModeProperty =
+        BindableProperty.Create(
+            nameof(DisplayMode),
+            typeof(PdfDisplayMode),
+            typeof(PdfView),
+            PdfDisplayMode.SinglePageContinuous);
+
+    /// <summary>
     /// Bindable property for scroll orientation.
     /// </summary>
     public static readonly BindableProperty ScrollOrientationProperty =
@@ -227,6 +237,15 @@ public class PdfView : View
     {
         get => (FitPolicy)GetValue(FitPolicyProperty);
         set => SetValue(FitPolicyProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the display mode for PDF pages (single page, continuous, two-up, etc.).
+    /// </summary>
+    public PdfDisplayMode DisplayMode
+    {
+        get => (PdfDisplayMode)GetValue(DisplayModeProperty);
+        set => SetValue(DisplayModeProperty, value);
     }
 
     /// <summary>

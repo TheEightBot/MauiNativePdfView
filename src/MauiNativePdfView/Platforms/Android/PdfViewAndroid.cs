@@ -26,6 +26,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private float _maxZoom = 3.0f;
     private int _pageSpacing = 10;
     private Abstractions.FitPolicy _fitPolicy = Abstractions.FitPolicy.Width;
+    private Abstractions.PdfDisplayMode _displayMode = Abstractions.PdfDisplayMode.SinglePageContinuous;
     private PdfScrollOrientation _scrollOrientation = PdfScrollOrientation.Vertical;
     private int _defaultPage = 0;
     private bool _enableAntialiasing = true;
@@ -116,6 +117,12 @@ public class PdfViewAndroid : IPdfView, IDisposable
     {
         get => _fitPolicy;
         set => _fitPolicy = value;
+    }
+
+    public Abstractions.PdfDisplayMode DisplayMode
+    {
+        get => _displayMode;
+        set => _displayMode = value;
     }
 
     public PdfScrollOrientation ScrollOrientation
@@ -209,6 +216,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     private void ConfigureAndLoad(PDFView.Configurator configurator)
     {
+        // Determine page snap and fling based on display mode
+        bool enablePageSnap = _displayMode == Abstractions.PdfDisplayMode.SinglePage;
+        bool enablePageFling = _displayMode == Abstractions.PdfDisplayMode.SinglePage;
+
         configurator
             .EnableSwipe(_enableSwipe)
             .EnableDoubleTap(_enableZoom)
@@ -216,6 +227,8 @@ public class PdfViewAndroid : IPdfView, IDisposable
             .DefaultPage(_defaultPage)
             .AutoSpacing(false)
             .Spacing(_pageSpacing)
+            .PageSnap(enablePageSnap)
+            .PageFling(enablePageFling)
             .NightMode(false)
             .FitEachPage(false)
             .EnableAntialiasing(_enableAntialiasing)
@@ -227,6 +240,8 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
         // Note: UseBestQuality sets rendering quality (ARGB_8888 vs RGB_565)
         // This is handled by the PDFView configuration automatically based on device capabilities
+        // Note: TwoUp and TwoUpContinuous modes are not directly supported in Android PDFView
+        // These will fall back to continuous scrolling behavior
 
         if (_enableLinkNavigation)
         {
