@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
+             x:Class="MauiPdfViewerSample.PdfTestPage"
+             Title="PDF Test">
+    
+    <Grid RowDefinitions="Auto,*,Auto" Padding="10">
+        
+        <!-- Header with controls -->
+        <VerticalStackLayout Grid.Row="0" Spacing="10" Padding="0,0,0,10">
+            <Label Text="PDF Viewer Test" 
+                   FontSize="24" 
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Button x:Name="LoadFileButton" 
+                        Text="Load Sample PDF" 
+                        Clicked="OnLoadFileClicked" />
+                <Button x:Name="PrevPageButton" 
+                        Text="◀ Prev" 
+                        Clicked="OnPrevPageClicked"
+                        IsEnabled="False" />
+                <Button x:Name="NextPageButton" 
+                        Text="Next ▶" 
+                        Clicked="OnNextPageClicked"
+                        IsEnabled="False" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- PDF Viewer -->
+        <Border Grid.Row="1" 
+                Stroke="Gray" 
+                StrokeThickness="1"
+                BackgroundColor="White">
+            <pdf:PdfView x:Name="PdfViewer"
+                         EnableZoom="True"
+                         EnableSwipe="True"
+                         PageSpacing="10"
+                         DocumentLoaded="OnDocumentLoaded"
+                         PageChanged="OnPageChanged"
+                         Error="OnError" />
+        </Border>
+
+        <!-- Status bar -->
+        <VerticalStackLayout Grid.Row="2" Spacing="5" Padding="0,10,0,0">
+            <Label x:Name="StatusLabel" 
+                   Text="Ready - Tap 'Load Sample PDF' to begin" 
+                   HorizontalOptions="Center"
+                   FontSize="12"
+                   TextColor="Gray" />
+            <Label x:Name="PageInfoLabel" 
+                   Text="" 
+                   HorizontalOptions="Center"
+                   FontSize="12"
+                   TextColor="DarkBlue" />
+        </VerticalStackLayout>
+        
+    </Grid>
+    
+</ContentPage>

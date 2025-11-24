@@ -1,0 +1,311 @@
+using Android.Content;
+using Android.Views;
+using Com.Ahmer.Pdfviewer;
+using Com.Ahmer.Pdfviewer.Link;
+using Com.Ahmer.Pdfviewer.Listener;
+using Com.Ahmer.Pdfviewer.Model;
+using Com.Ahmer.Pdfviewer.Util;
+using MauiNativePdfView.Abstractions;
+using Java.IO;
+
+namespace MauiNativePdfView.Platforms.Android;
+
+/// <summary>
+/// Android implementation of IPdfView using AhmerPdfium PDFView.
+/// Wraps PDFView using composition since it's sealed.
+/// </summary>
+public class PdfViewAndroid : IPdfView, IDisposable
+{
+    private readonly PDFView _pdfView;
+    private PdfSource? _source;
+    private bool _enableZoom = true;
+    private bool _enableSwipe = true;
+    private bool _enableLinkNavigation = true;
+    private float _zoom = 1.0f;
+    private float _minZoom = 1.0f;
+    private float _maxZoom = 3.0f;
+    private int _pageSpacing = 10;
+    private Abstractions.FitPolicy _fitPolicy = Abstractions.FitPolicy.Width;
+    private int _currentPage = 0;
+    private int _pageCount = 0;
+
+    public PdfViewAndroid(Context context)
+    {
+        _pdfView = new PDFView(context, null);
+    }
+
+    /// <summary>
+    /// Gets the native PDFView instance.
+    /// </summary>
+    public PDFView NativeView => _pdfView;
+
+    #region IPdfView Implementation
+
+    public PdfSource? Source
+    {
+        get => _source;
+        set
+        {
+            if (_source != value)
+            {
+                _source = value;
+                LoadDocument();
+            }
+        }
+    }
+
+    public int CurrentPage => _currentPage;
+
+    public int PageCount => _pageCount;
+
+    public bool EnableZoom
+    {
+        get => _enableZoom;
+        set => _enableZoom = value;
+    }
+
+    public bool EnableSwipe
+    {
+        get => _enableSwipe;
+        set => _enableSwipe = value;
+    }
+
+    public bool EnableLinkNavigation
+    {
+        get => _enableLinkNavigation;
+        set => _enableLinkNavigation = value;
+    }
+
+    public float Zoom
+    {
+        get => _zoom;
+        set
+        {
+            if (_zoom != value)
+            {
+                _zoom = Math.Clamp(value, _minZoom, _maxZoom);
+                _pdfView.ZoomTo(_zoom);
+            }
+        }
+    }
+
+    public float MinZoom
+    {
+        get => _minZoom;
+        set => _minZoom = value;
+    }
+
+    public float MaxZoom
+    {
+        get => _maxZoom;
+        set => _maxZoom = value;
+    }
+
+    public int PageSpacing
+    {
+        get => _pageSpacing;
+        set => _pageSpacing = value;
+    }
+
+    public Abstractions.FitPolicy FitPolicy
+    {
+        get => _fitPolicy;
+        set => _fitPolicy = value;
+    }
+
+    public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
+    public event EventHandler<PageChangedEventArgs>? PageChanged;
+    public event EventHandler<PdfErrorEventArgs>? Error;
+    public event EventHandler<LinkTappedEventArgs>? LinkTapped;
+
+    public void GoToPage(int pageIndex)
+    {
+        if (pageIndex >= 0 && pageIndex < _pageCount)
+        {
+            _pdfView.JumpTo(pageIndex);
+        }
+    }
+
+    public void Reload()
+    {
+        LoadDocument();
+    }
+
+    #endregion
+
+    private void LoadDocument()
+    {
+        if (_source == null)
+            return;
+
+        try
+        {
+            var configurator = _source switch
+            {
+                FilePdfSource fileSource => _pdfView.FromFile(new Java.IO.File(fileSource.FilePath)),
+                UriPdfSource uriSource => _pdfView.FromUri(global::Android.Net.Uri.Parse(uriSource.Uri.ToString())),
+                StreamPdfSource streamSource => FromStream(streamSource.Stream),
+                BytesPdfSource bytesSource => _pdfView.FromBytes(bytesSource.Data),
+                AssetPdfSource assetSource => _pdfView.FromAsset(assetSource.AssetName),
+                _ => throw new NotSupportedException($"PDF source type {_source.GetType().Name} is not supported.")
+            };
+
+            ConfigureAndLoad(configurator);
+        }
+        catch (Exception ex)
+        {
+            OnError(new PdfErrorEventArgs($"Failed to load PDF document: {ex.Message}", ex));
+        }
+    }
+
+    private void ConfigureAndLoad(PDFView.Configurator configurator)
+    {
+        configurator
+            .EnableSwipe(_enableSwipe)
+            .EnableDoubleTap(_enableZoom)
+            .DefaultPage(0)
+            .AutoSpacing(false)
+            .Spacing(_pageSpacing)
+            .NightMode(false)
+            .FitEachPage(false)
+            .OnLoad(new LoadCompleteListener(this))
+            .OnPageChange(new PageChangeListener(this))
+            .OnError(new ErrorListener(this));
+
+        if (_enableLinkNavigation)
+        {
+            configurator.EnableAnnotationRendering(true)
+                       .LinkHandler(new LinkHandlerImpl(this));
+        }
+
+        configurator.Load();
+    }
+
+    private void OnDocumentLoaded(int pageCount)
+    {
+        _pageCount = pageCount;
+        DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
+    }
+
+    private void OnPageChanged(int pageIndex, int pageCount)
+    {
+        _currentPage = pageIndex;
+        _pageCount = pageCount;
+        PageChanged?.Invoke(this, new PageChangedEventArgs(pageIndex, pageCount));
+    }
+
+    private void OnError(PdfErrorEventArgs args)
+    {
+        Error?.Invoke(this, args);
+    }
+
+    private void OnLinkTapped(LinkTappedEventArgs args)
+    {
+        LinkTapped?.Invoke(this, args);
+    }
+
+    #region Helper Methods
+
+    private PDFView.Configurator FromStream(Stream stream)
+    {
+        var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        return _pdfView.FromBytes(memoryStream.ToArray());
+    }
+
+    #endregion
+
+    #region Listener Implementations
+
+    private class LoadCompleteListener : Java.Lang.Object, IOnLoadCompleteListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public LoadCompleteListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void LoadComplete(int nbPages)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                view.OnDocumentLoaded(nbPages);
+            }
+        }
+    }
+
+    private class PageChangeListener : Java.Lang.Object, IOnPageChangeListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public PageChangeListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void OnPageChanged(int page, int pageCount)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                view.OnPageChanged(page, pageCount);
+            }
+        }
+    }
+
+    private class ErrorListener : Java.Lang.Object, IOnErrorListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public ErrorListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void OnError(Java.Lang.Throwable? t)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                var message = t?.Message ?? "Unknown error occurred";
+                view.OnError(new PdfErrorEventArgs(message));
+            }
+        }
+    }
+
+    private class LinkHandlerImpl : Java.Lang.Object, ILinkHandler
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public LinkHandlerImpl(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void HandleLinkEvent(LinkTapEvent? linkTapEvent)
+        {
+            if (_viewRef.TryGetTarget(out var view) && linkTapEvent != null)
+            {
+                var link = linkTapEvent.Link;
+                var args = new LinkTappedEventArgs(
+                    link?.Uri,
+                    null  // DestPageIdx not available in this version
+                );
+
+                view.OnLinkTapped(args);
+
+                // If not handled by the user, use default behavior
+                if (!args.Handled)
+                {
+                    new DefaultLinkHandler(view._pdfView).HandleLinkEvent(linkTapEvent);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    public void Dispose()
+    {
+        _pdfView?.Dispose();
+    }
+}

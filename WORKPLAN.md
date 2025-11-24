@@ -1,13 +1,15 @@
 # MauiNativePdfView - Comprehensive Workplan
 
 ## Project Overview
+
 A .NET MAUI PDF viewer library that wraps native PDF controls for iOS (PDFKit) and Android (AndroidPdfViewer). This library will provide a consistent, cross-platform API for displaying PDFs with advanced features including zoom, link handling, and multiple source support.
 
 ## Research Summary
 
 ### iOS Implementation
+
 - **Native Framework**: PDFKit (built-in, iOS 11.0+)
-- **Key Features**: 
+- **Key Features**:
   - Native PDF rendering with PDFView
   - Built-in zoom and gesture support
   - Link handling via PDFAnnotation
@@ -16,9 +18,10 @@ A .NET MAUI PDF viewer library that wraps native PDF controls for iOS (PDFKit) a
   - Full Apple ecosystem support
 
 ### Android Implementation
+
 - **Selected Library**: AhmerPdfium (maintained fork of barteksc/AndroidPdfViewer)
 - **Repository**: https://github.com/AhmerAfzal1/AhmerPdfium
-- **Versions**: 
+- **Versions**:
   - PdfViewer: v2.0.1 (`io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1`)
   - Pdfium Core: v1.9.2 (`io.github.ahmerafzal1:ahmer-pdfium:1.9.2`)
 - **Statistics**: 24 stars (newer fork), Apache 2.0 license, actively maintained
@@ -36,6 +39,7 @@ A .NET MAUI PDF viewer library that wraps native PDF controls for iOS (PDFKit) a
   - Published to Maven Central
 
 **Why AhmerPdfium**:
+
 1. **Critical bug fixes** - Resolves first-page rendering issues in original library
 2. **16 KB page size support** - Essential for Android 15+ and Google Play requirements
 3. **Active maintenance** - Recent updates specifically for modern Android
@@ -48,6 +52,7 @@ A .NET MAUI PDF viewer library that wraps native PDF controls for iOS (PDFKit) a
 10. API 24+ minimum provides access to modern Android features
 
 ## Project Structure
+
 ```
 MauiNativePdfView/
 ├── src/
@@ -69,10 +74,12 @@ MauiNativePdfView/
 ## Detailed Workplan & Checklist
 
 ### Phase 1: Project Setup & Infrastructure
+
 **Branch**: `feature/project-setup`
 
 ```markdown
 - [ ] Create solution structure
+
   - [ ] Create blank solution file
   - [ ] Set up directory structure (src, samples, docs)
   - [ ] Create .gitignore for .NET MAUI projects
@@ -105,10 +112,12 @@ MauiNativePdfView/
 ---
 
 ### Phase 2: Android Native Wrapper Implementation
+
 **Branch**: `feature/android-implementation`
 
 ```markdown
 - [ ] Design shared abstraction layer
+
   - [ ] Define IPdfView interface with core methods
   - [ ] Define IPdfDocument interface
   - [ ] Define enums for zoom modes, fit policies
@@ -117,6 +126,7 @@ MauiNativePdfView/
   - [ ] Document interface contracts
 
 - [ ] Implement Android platform wrapper
+
   - [ ] Create AndroidPdfViewHandler class
   - [ ] Implement PDF loading from different sources
     - [ ] Load from file path
@@ -163,15 +173,18 @@ MauiNativePdfView/
 ---
 
 ### Phase 3: iOS Native Wrapper Implementation
+
 **Branch**: `feature/ios-implementation`
 
 ```markdown
 - [ ] Create iOS binding project structure
+
   - [ ] Verify PDFKit availability (system framework)
   - [ ] Document PDFKit API usage patterns
   - [ ] Create binding helper classes if needed
 
 - [ ] Implement iOS platform wrapper
+
   - [ ] Create iOSPdfViewHandler class
   - [ ] Configure PDFView component
   - [ ] Implement PDF loading from different sources
@@ -218,10 +231,12 @@ MauiNativePdfView/
 ---
 
 ### Phase 4: MAUI Control & Cross-Platform API
+
 **Branch**: `feature/maui-control`
 
 ```markdown
 - [ ] Design MAUI control
+
   - [ ] Create PdfView class (inheriting from View)
   - [ ] Define bindable properties
     - [ ] Source (PdfSource)
@@ -244,6 +259,7 @@ MauiNativePdfView/
     - [ ] ZoomToScaleCommand
 
 - [ ] Implement MAUI handler
+
   - [ ] Create PdfViewHandler class
   - [ ] Implement CreatePlatformView for Android
   - [ ] Implement CreatePlatformView for iOS
@@ -257,6 +273,7 @@ MauiNativePdfView/
   - [ ] Handle platform-specific differences gracefully
 
 - [ ] Implement helper classes
+
   - [ ] PdfSource class with factory methods
     - [ ] FromFile(string path)
     - [ ] FromUrl(string url)
@@ -279,6 +296,7 @@ MauiNativePdfView/
 ---
 
 ### Phase 5: Sample Application Development
+
 **Branch**: `feature/sample-app`
 
 ```markdown
@@ -291,8 +309,8 @@ MauiNativePdfView/
     - [ ] Zoom controls
     - [ ] Source selection
   - [ ] Add sample PDF files to resources
-  
 - [ ] Implement feature demonstrations
+
   - [ ] Demo: Load PDF from local file
     - [ ] File picker integration
     - [ ] Display selected PDF
@@ -317,6 +335,7 @@ MauiNativePdfView/
     - [ ] Link click event logging
 
 - [ ] Add sample PDF files
+
   - [ ] Simple text PDF
   - [ ] PDF with images
   - [ ] PDF with internal links
@@ -335,6 +354,7 @@ MauiNativePdfView/
 ---
 
 ### Phase 6: Documentation & Polish
+
 **Branch**: `feature/documentation`
 
 ```markdown
@@ -345,32 +365,27 @@ MauiNativePdfView/
   - [ ] PLATFORM_NOTES.md with platform-specific details
   - [ ] CHANGELOG.md for version history
   - [ ] CONTRIBUTING.md for contributors
-  
 - [ ] Add XML documentation
   - [ ] Document all public classes
   - [ ] Document all public methods
   - [ ] Document all public properties
   - [ ] Document all events
   - [ ] Add code examples in documentation
-  
 - [ ] Create usage examples
   - [ ] Basic usage example
   - [ ] Advanced configuration example
   - [ ] Error handling example
   - [ ] Custom link handling example
   - [ ] Memory management example
-  
 - [ ] Performance optimization
   - [ ] Profile memory usage
   - [ ] Optimize large PDF loading
   - [ ] Implement progressive loading if needed
   - [ ] Add memory cleanup best practices
-  
 - [ ] Add unit tests (if applicable)
   - [ ] Test PdfSource factory methods
   - [ ] Test property mapping
   - [ ] Test event handling
-  
 - [ ] Code quality improvements
   - [ ] Add code analyzers
   - [ ] Fix any warnings
@@ -383,6 +398,7 @@ MauiNativePdfView/
 ---
 
 ### Phase 7: NuGet Package & Release
+
 **Branch**: `release/v1.0.0`
 
 ```markdown
@@ -398,25 +414,21 @@ MauiNativePdfView/
   - [ ] Include XML documentation
   - [ ] Configure multi-targeting properly
   - [ ] Add dependencies to package spec
-  
 - [ ] Build and test package
   - [ ] Build release configuration
   - [ ] Create NuGet package
   - [ ] Test package installation locally
   - [ ] Verify package contents
   - [ ] Test in clean sample project
-  
 - [ ] Create release artifacts
   - [ ] Tag release in git (v1.0.0)
   - [ ] Create GitHub release (if applicable)
   - [ ] Include release notes
   - [ ] Attach compiled binaries
-  
 - [ ] Publish package
   - [ ] Publish to NuGet.org (or private feed)
   - [ ] Verify package listing
   - [ ] Test package installation from NuGet
-  
 - [ ] Post-release tasks
   - [ ] Announce release
   - [ ] Update documentation with installation instructions
@@ -431,10 +443,12 @@ MauiNativePdfView/
 ## Branching Strategy
 
 ### Main Branches
+
 - `main` - Production-ready code
 - `develop` - Integration branch for features
 
 ### Feature Branches
+
 - `feature/project-setup` - Initial setup
 - `feature/android-implementation` - Android wrapper
 - `feature/ios-implementation` - iOS wrapper
@@ -444,6 +458,7 @@ MauiNativePdfView/
 - `release/v1.0.0` - Release preparation
 
 ### Branch Workflow
+
 1. Create feature branch from `develop`
 2. Implement and test feature
 3. Commit regularly with descriptive messages
@@ -458,6 +473,7 @@ MauiNativePdfView/
 Format: `<type>(<scope>): <subject>`
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -467,6 +483,7 @@ Types:
 - `chore`: Build process or auxiliary tool changes
 
 Examples:
+
 - `feat(android): implement PDF loading from URL`
 - `fix(ios): resolve memory leak in PDFView handler`
 - `docs(readme): add installation instructions`
@@ -477,10 +494,12 @@ Examples:
 ## Key Dependencies
 
 ### .NET MAUI
+
 - Target: .NET 8+ or .NET 9
 - MAUI Workload: Latest stable
 
 ### Android
+
 - AhmerPdfViewer: 2.0.1 (`io.github.ahmerafzal1:ahmer-pdfviewer:2.0.1`)
 - AhmerPdfium: 1.9.2 (`io.github.ahmerafzal1:ahmer-pdfium:1.9.2`)
 - Minimum Android SDK: API 24 (Android 7.0)
@@ -489,6 +508,7 @@ Examples:
 - NDK: r28+
 
 ### iOS
+
 - PDFKit: System framework (iOS 11.0+)
 - Minimum iOS: 11.0
 - Target iOS: 17.0+
@@ -526,6 +546,7 @@ Examples:
 ## Notes & Considerations
 
 ### Android Considerations
+
 - AhmerPdfium uses enhanced PdfiumAndroid which adds ~16MB to app size (native libraries for multiple architectures)
 - Consider APK splitting for production apps to reduce size
 - 16 KB page size support is required for Google Play as of Nov 1, 2025 (fully supported in AhmerPdfium)
@@ -536,6 +557,7 @@ Examples:
 - Search functionality is implemented (highlighting in progress)
 
 ### iOS Considerations
+
 - PDFKit is a system framework (no size overhead)
 - Available on iOS 11.0+, macOS 10.4+, Mac Catalyst 11.0+
 - Excellent performance with native rendering
@@ -543,6 +565,7 @@ Examples:
 - Full annotation support available
 
 ### Cross-Platform Considerations
+
 - Abstract away platform differences in public API
 - Document any unavoidable platform limitations
 - Ensure consistent event firing between platforms
@@ -550,12 +573,14 @@ Examples:
 - Consider using MAUI's IPlatformApplication for initialization
 
 ### Performance Considerations
+
 - Large PDFs (>50MB) may require special handling
 - Consider lazy loading of pages
 - Implement proper disposal to prevent memory leaks
 - Monitor memory usage during testing
 
 ### Maintenance Considerations
+
 - AhmerPdfium binding will need updates when library updates
 - Monitor AhmerAfzal1/AhmerPdfium repository for updates
 - Keep up with .NET MAUI updates
@@ -567,13 +592,13 @@ Examples:
 
 ## Risk Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| AndroidPdfViewer binding complexity | High | Use Native Library Interop pattern, create thin wrapper API |
-| Platform API differences | Medium | Design abstraction layer carefully, document limitations |
-| Large file memory issues | Medium | Implement streaming, lazy loading, proper disposal |
-| Android binding maintenance | Medium | Keep wrapper API minimal, document update process |
-| NuGet package size | Low | Use APK splitting guidance in docs, consider separate packages per platform |
+| Risk                                | Impact | Mitigation                                                                  |
+| ----------------------------------- | ------ | --------------------------------------------------------------------------- |
+| AndroidPdfViewer binding complexity | High   | Use Native Library Interop pattern, create thin wrapper API                 |
+| Platform API differences            | Medium | Design abstraction layer carefully, document limitations                    |
+| Large file memory issues            | Medium | Implement streaming, lazy loading, proper disposal                          |
+| Android binding maintenance         | Medium | Keep wrapper API minimal, document update process                           |
+| NuGet package size                  | Low    | Use APK splitting guidance in docs, consider separate packages per platform |
 
 ---
 
@@ -593,4 +618,4 @@ Examples:
 
 ---
 
-*This workplan is a living document and will be updated as the project progresses.*
+_This workplan is a living document and will be updated as the project progresses._

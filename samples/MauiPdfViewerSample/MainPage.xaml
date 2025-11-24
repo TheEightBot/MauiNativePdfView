@@ -30,6 +30,15 @@
                 SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
                 HorizontalOptions="Fill" />
+
+            <Button
+                x:Name="PdfTestBtn"
+                Text="📄 Test PDF Viewer" 
+                SemanticProperties.Hint="Opens the PDF viewer test page"
+                Clicked="OnPdfTestClicked"
+                HorizontalOptions="Fill"
+                BackgroundColor="#2196F3"
+                TextColor="White" />
         </VerticalStackLayout>
     </ScrollView>
 
