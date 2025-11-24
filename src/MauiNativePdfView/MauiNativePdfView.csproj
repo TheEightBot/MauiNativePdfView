@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
+		<!-- Removed Mac Catalyst and Windows for initial implementation -->
+
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- Package Information -->
+		<PackageId>MauiNativePdfView</PackageId>
+		<Version>1.0.0-alpha1</Version>
+		<Authors>Your Name</Authors>
+		<Description>Cross-platform .NET MAUI PDF viewer library using native controls (PDFKit for iOS, AhmerPdfium for Android)</Description>
+		<PackageProjectUrl>https://github.com/YourUsername/MauiNativePdfView</PackageProjectUrl>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/YourUsername/MauiNativePdfView</RepositoryUrl>
+		<PackageTags>maui;pdf;pdfviewer;ios;android;pdfkit;ahmer-pdfium</PackageTags>
+
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">12.2</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+	</ItemGroup>
+
+	<!-- Android-specific references -->
+	<ItemGroup Condition="$(TargetFramework.Contains('android'))">
+		<ProjectReference Include="..\MauiNativePdfView.Android.Binding\MauiNativePdfView.Android.Binding.csproj" />
+	</ItemGroup>
+
+</Project>
