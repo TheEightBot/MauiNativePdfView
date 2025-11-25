@@ -11,13 +11,19 @@
 
 		<!-- Package Information -->
 		<PackageId>MauiNativePdfView</PackageId>
-		<Version>1.0.0-alpha1</Version>
-		<Authors>Your Name</Authors>
-		<Description>Cross-platform .NET MAUI PDF viewer library using native controls (PdfKit for iOS, AhmerPdfium for Android)</Description>
-		<PackageProjectUrl>https://github.com/YourUsername/MauiNativePdfView</PackageProjectUrl>
-		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<RepositoryUrl>https://github.com/YourUsername/MauiNativePdfView</RepositoryUrl>
-		<PackageTags>maui;pdf;pdfviewer;ios;android;pdfkit;ahmer-pdfium</PackageTags>
+		<Version>1.0.0</Version>
+		<Authors>MauiNativePdfView Contributors</Authors>
+		<Company>MauiNativePdfView</Company>
+		<Product>MauiNativePdfView</Product>
+		<Description>High-performance, cross-platform PDF viewer for .NET MAUI using native controls. Features native PDF rendering with PDFKit (iOS) and AhmerPdfium (Android), zero web dependencies, full annotation support, and comprehensive event system.</Description>
+		<PackageProjectUrl>https://github.com/mstonis/MauiNativePdfView</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/mstonis/MauiNativePdfView</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>maui;pdf;pdfviewer;ios;android;pdfkit;ahmer-pdfium;native;cross-platform;annotations</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
+		<Copyright>Copyright (c) 2025 MauiNativePdfView Contributors</Copyright>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">12.2</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
@@ -25,6 +31,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
+	</ItemGroup>
+
+	<!-- Package content -->
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\images\icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<!-- Android-specific references -->

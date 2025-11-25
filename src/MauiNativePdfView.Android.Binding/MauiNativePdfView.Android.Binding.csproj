@@ -12,13 +12,17 @@
     
     <!-- Package Information -->
     <PackageId>MauiNativePdfView.Android.Binding</PackageId>
-    <Version>1.0.0-alpha1</Version>
-    <Authors>Your Name</Authors>
-    <Description>.NET Android binding for AhmerPdfium - A maintained PDF viewer library with 16 KB page size support</Description>
-    <PackageProjectUrl>https://github.com/YourUsername/MauiNativePdfView</PackageProjectUrl>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/YourUsername/MauiNativePdfView</RepositoryUrl>
-    <PackageTags>maui;android;pdf;pdfviewer;binding;ahmer-pdfium</PackageTags>
+    <Version>1.0.0</Version>
+    <Authors>MauiNativePdfView Contributors</Authors>
+    <Company>MauiNativePdfView</Company>
+    <Product>MauiNativePdfView Android Binding</Product>
+    <Description>.NET Android binding for AhmerPdfium - A maintained fork of AndroidPdfViewer with 16KB page size support and reliable PDF rendering. This binding is used by MauiNativePdfView for Android platform support.</Description>
+    <PackageProjectUrl>https://github.com/mstonis/MauiNativePdfView</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mstonis/MauiNativePdfView</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>maui;android;pdf;pdfviewer;binding;ahmer-pdfium;native</PackageTags>
+    <Copyright>Copyright (c) 2025 MauiNativePdfView Contributors</Copyright>
     
     <!--
       AAR files in the Jars directory are automatically included.
