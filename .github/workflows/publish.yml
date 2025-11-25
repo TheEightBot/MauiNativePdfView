@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   packages: write
+  discussions: write
 
 env:
   DOTNET_VERSION: '9.0.x'
@@ -96,9 +97,8 @@ jobs:
     
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: ./artifacts/*.nupkg
         generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GH_PAT }}

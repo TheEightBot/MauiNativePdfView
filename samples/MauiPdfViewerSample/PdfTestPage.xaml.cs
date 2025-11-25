@@ -35,7 +35,7 @@ public partial class PdfTestPage : ContentPage
         try
         {
             StatusLabel.Text = "Loading PDF...";
-            
+
             // Load from raw asset
             PdfViewer.Source = PdfSource.FromAsset("sample.pdf");
         }
@@ -51,7 +51,7 @@ public partial class PdfTestPage : ContentPage
         try
         {
             StatusLabel.Text = "Loading PDF with annotations...";
-            
+
             // Load PDF with annotations from raw asset
             PdfViewer.Source = PdfSource.FromAsset("sample_with_annotations.pdf");
         }

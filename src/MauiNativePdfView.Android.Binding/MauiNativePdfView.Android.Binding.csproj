@@ -1,43 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <!--
-      Enable trim analyzers for Android class libraries.
-      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
-    -->
-    <IsTrimmable>true</IsTrimmable>
-    
-    <!-- Package Information -->
-    <PackageId>MauiNativePdfView.Android.Binding</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>MauiNativePdfView Contributors</Authors>
-    <Company>MauiNativePdfView</Company>
-    <Product>MauiNativePdfView Android Binding</Product>
-    <Description>.NET Android binding for AhmerPdfium - A maintained fork of AndroidPdfViewer with 16KB page size support and reliable PDF rendering. This binding is used by MauiNativePdfView for Android platform support.</Description>
-    <PackageProjectUrl>https://github.com/mstonis/MauiNativePdfView</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/mstonis/MauiNativePdfView</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>maui;android;pdf;pdfviewer;binding;ahmer-pdfium;native</PackageTags>
-    <Copyright>Copyright (c) 2025 MauiNativePdfView Contributors</Copyright>
-    
-    <!--
-      AAR files in the Jars directory are automatically included.
-      AhmerPdfium v1.9.2 and AhmerPdfViewer v2.0.1
-    -->
-  </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Explicitly declare AAR files for clarity -->
-    <AndroidLibrary Include="Jars\ahmer-pdfium-1.9.2.aar" />
-    <AndroidLibrary Include="Jars\ahmer-pdfviewer-2.0.1.aar" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Kotlin standard library dependency -->
-    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.1.0" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- Enable trim analyzers for Android class libraries.
+      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming -->
+        <IsTrimmable>true</IsTrimmable>
+        <!-- Package Information -->
+        <PackageId>eightbot.MauiNativePdfView.Android.Binding</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>MauiNativePdfView Contributors</Authors>
+        <Company>MauiNativePdfView</Company>
+        <Product>MauiNativePdfView Android Binding</Product>
+        <Description>.NET Android binding for AhmerPdfium - A maintained fork of AndroidPdfViewer with 16KB page size support and reliable PDF rendering. This binding is used by MauiNativePdfView for Android platform support.</Description>
+        <PackageProjectUrl>https://github.com/TheEightBot/MauiNativePdfView</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/TheEightBot/MauiNativePdfView</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>maui;android;pdf;pdfviewer;binding;ahmer-pdfium;native</PackageTags>
+        <Copyright>Copyright (c) 2025 MauiNativePdfView Contributors</Copyright>
+        <!-- AAR files in the Jars directory are automatically included.
+      AhmerPdfium v1.9.2 and AhmerPdfViewer v2.0.1 -->
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Explicitly declare AAR files for clarity -->
+        <AndroidLibrary Include="Jars\ahmer-pdfium-1.9.2.aar" />
+        <AndroidLibrary Include="Jars\ahmer-pdfviewer-2.0.1.aar" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Kotlin standard library dependency -->
+        <PackageReference Include="Xamarin.Kotlin.StdLib"
+                          Version="2.1.0" />
+    </ItemGroup>
 </Project>
