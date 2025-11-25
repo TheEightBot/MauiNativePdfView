@@ -86,7 +86,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         dotnet nuget push ./artifacts/*.nupkg \
-          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --api-key ${{ secrets.EIGHTBOT_NUGET_APIKEY }} \
           --source https://api.nuget.org/v3/index.json \
           --skip-duplicate
     
