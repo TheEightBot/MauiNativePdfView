@@ -74,9 +74,9 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Title                          | ✅                    | ✅            | ✅                     | Complete                  |
 | Author                         | ✅                    | ✅            | ✅                     | Complete                  |
 | Subject                        | ✅                    | ✅            | ✅                     | Complete                  |
-| Creator                        | ❌                    | ✅            | ❌                     | ✅ Add with PdfDocument   |
-| Keywords                       | ❌                    | ✅            | ❌                     | ✅ Add with PdfDocument   |
-| Creation/Modification dates    | ❌                    | ✅            | ❌                     | ✅ Add with PdfDocument   |
+| Creator                        | ❌                    | ✅            | ❌                     | ❌ Cancelled (library bug)|
+| Keywords                       | ❌                    | ✅            | ❌                     | ❌ Cancelled (library bug)|
+| Creation/Modification dates    | ❌                    | ✅            | ❌                     | ❌ Cancelled (library bug)|
 | **Advanced Features**          |                       |               |                        |                           |
 | Text selection                 | ❌                    | ✅            | ❌                     | ❌ Skip (complex/iOS)     |
 | Text search                    | ❌                    | ✅            | ❌                     | ❌ Skip (complex/iOS)     |
@@ -139,22 +139,27 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - ✅ Graceful error handling for incorrect/missing passwords
 - ✅ Merged to main (commit ee2eed9)
 
-### Phase 6: Enhanced Document Metadata (Low Priority)
+### Phase 6: Enhanced Document Metadata ❌ **CANCELLED**
 
-**Branch:** `feature/metadata`
+**Status:** Cancelled due to Android library limitations
 
-**Goal:** Expose richer document metadata across platforms
+**Reason:** The AhmerPdfium library has a fundamental bug where the `PdfDocument.Meta` object is cached at the native Pdfium layer and reused across different PDF documents. This causes stale metadata to be returned after switching documents.
 
-#### 6.1 Extended Document Properties
-- Add properties to `DocumentLoadedEventArgs`:
-  - `Creator` (string)
-  - `Keywords` (string)
-  - `CreationDate` (DateTime?)
-  - `ModificationDate` (DateTime?)
-- **iOS:** Read from `PdfDocument.DocumentAttributes` dictionary
-- **Android:** Attempt to read from `PdfDocument` metadata if available
-  - Use PdfiumCore API if exposed
-  - Otherwise return null (graceful degradation)
+**Investigation conducted:**
+- ✅ Confirmed bug: Same Meta object hashcode across different PDFs
+- ❌ Attempted fix: Read metadata in OnLoad callback (per GitHub issue #828) - failed
+- ❌ Attempted fix: Call Recycle() before loading new document - failed
+- ❌ Attempted fix: Multiple caching strategies (Post, PostDelayed, etc.) - all failed
+- ❌ Attempted fix: Open PDF independently with PdfiumCore - caused app crashes
+
+**Root cause:** Native-layer caching in the AhmerPdfium library that cannot be cleared or bypassed
+
+**Alternatives considered:**
+1. Fork and fix the library - too invasive
+2. Switch to different PDF library - out of scope  
+3. Accept iOS-only metadata - breaks cross-platform parity goal
+
+**Decision:** Feature cancelled. Basic metadata (Title, Author, Subject) remains available through `DocumentLoadedEventArgs` which works reliably on both platforms.
 
 ### Phase 7: Annotation Support (Low Priority)
 
@@ -312,13 +317,15 @@ For each phase:
 | Phase 4 | Core Enhancements | 2-3 days | ✅ Complete |
 | Phase 5.1 | Display Mode | 0.5 days | ✅ Complete |
 | Phase 5.2 | Password Support | 0.5 days | ✅ Complete |
-| Phase 6 | Document Metadata | 0.5-1 day | 📋 Planned |
+| Phase 6 | Document Metadata | N/A | ❌ Cancelled |
 | Phase 7 | Annotations | 1 day | 📋 Planned |
 
-**Total remaining**: ~1.5-2 days for remaining phases
-**Note:** Night Mode feature removed from scope after extensive research and implementation attempts
-**Completed**: Phase 4 (2-3 days)
-**Project total**: ~5.5-8 days
+**Total remaining**: ~1 day for Phase 7
+**Notes:** 
+- Night Mode feature removed from scope (iOS incompatibility)
+- Enhanced Metadata feature cancelled (Android library bug)
+**Completed**: Phase 4, 5.1, 5.2 (~3.5-4 days)
+**Project total**: ~4.5-7 days
 
 ## Research Summary
 
