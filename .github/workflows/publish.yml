@@ -6,6 +6,10 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+
 env:
   DOTNET_VERSION: '9.0.x'
   CONFIGURATION: Release
