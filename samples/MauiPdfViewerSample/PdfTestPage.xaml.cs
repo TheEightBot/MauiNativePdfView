@@ -153,4 +153,11 @@ public partial class PdfTestPage : ContentPage
         ToggleAnnotationsButton.Text = PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled";
         StatusLabel.Text = $"Annotation rendering: {(PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled")}";
     }
+
+    private void OnAnnotationTapped(object? sender, AnnotationTappedEventArgs e)
+    {
+        var contents = string.IsNullOrEmpty(e.Contents) ? "(no content)" : e.Contents;
+        AnnotationInfoLabel.Text = $"Annotation tapped on page {e.PageIndex + 1}: Type={e.AnnotationType}, Contents={contents}";
+        StatusLabel.Text = $"Annotation tapped: {e.AnnotationType}";
+    }
 }

@@ -14,6 +14,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     private PdfSource? _source;
     private bool _disposed;
     private NSObject? _pageChangedObserver;
+    private NSObject? _annotationHitObserver;
     private UITapGestureRecognizer? _tapGestureRecognizer;
     private PdfScrollOrientation _scrollOrientation = PdfScrollOrientation.Vertical;
     private int _defaultPage = 0;
@@ -34,6 +35,9 @@ public class PdfViewiOS : IPdfView, IDisposable
             PdfKit.PdfView.PageChangedNotification,
             OnPageChangedNotification,
             _pdfView);
+
+        // Subscribe to annotation hit notifications
+        _annotationHitObserver = PdfKit.PdfView.Notifications.ObserveAnnotationHit(OnAnnotationHit);
 
         // Add tap gesture recognizer
         _tapGestureRecognizer = new UITapGestureRecognizer(HandleTap);
@@ -222,6 +226,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
     public event EventHandler<PdfTappedEventArgs>? Tapped;
     public event EventHandler<RenderedEventArgs>? Rendered;
+    public event EventHandler<AnnotationTappedEventArgs>? AnnotationTapped;
 
     public void GoToPage(int pageIndex)
     {
@@ -414,6 +419,48 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
     }
 
+    private void OnAnnotationHit(object? sender, PdfViewAnnotationHitEventArgs e)
+    {
+        if (_pdfView.Document == null)
+            return;
+
+        // Extract annotation from the notification user info
+        var userInfo = e.Notification.UserInfo;
+        if (userInfo == null)
+            return;
+
+        // Get the annotation object from the user info dictionary
+        var annotationKey = new NSString("PDFAnnotationHit");
+        if (!userInfo.ContainsKey(annotationKey))
+            return;
+
+        var annotationObject = userInfo[annotationKey];
+        if (annotationObject is PdfAnnotation annotation)
+        {
+            // Get the page index for this annotation
+            var page = annotation.Page;
+            if (page == null)
+                return;
+
+            var pageIndex = (int)_pdfView.Document.GetPageIndex(page);
+
+            // Extract annotation information
+            var annotationType = annotation.AnnotationType.ToString() ?? "Unknown";
+            var contents = annotation.Contents ?? string.Empty;
+            var bounds = annotation.Bounds;
+
+            // Create and fire the event
+            var args = new AnnotationTappedEventArgs(
+                pageIndex,
+                annotationType,
+                contents,
+                new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height)
+            );
+
+            AnnotationTapped?.Invoke(this, args);
+        }
+    }
+
     private void OnError(PdfErrorEventArgs args)
     {
         Error?.Invoke(this, args);
@@ -449,6 +496,12 @@ public class PdfViewiOS : IPdfView, IDisposable
             NSNotificationCenter.DefaultCenter.RemoveObserver(_pageChangedObserver);
             _pageChangedObserver?.Dispose();
             _pageChangedObserver = null;
+        }
+
+        if (_annotationHitObserver != null)
+        {
+            _annotationHitObserver?.Dispose();
+            _annotationHitObserver = null;
         }
 
         if (_tapGestureRecognizer != null)

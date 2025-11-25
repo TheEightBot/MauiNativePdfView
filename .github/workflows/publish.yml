@@ -1,0 +1,100 @@
+name: Build and Publish to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  build-and-publish:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Install MAUI workloads
+      run: dotnet workload install maui
+    
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+        else
+          VERSION="1.0.0-dev.${{ github.run_number }}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building dev version: $VERSION"
+        fi
+    
+    - name: Restore dependencies
+      run: |
+        dotnet restore src/MauiNativePdfView.Android.Binding/MauiNativePdfView.Android.Binding.csproj
+        dotnet restore src/MauiNativePdfView/MauiNativePdfView.csproj
+    
+    - name: Build Android Binding
+      run: |
+        dotnet build src/MauiNativePdfView.Android.Binding/MauiNativePdfView.Android.Binding.csproj \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-restore \
+          /p:Version=${{ steps.get_version.outputs.VERSION }}
+    
+    - name: Build Main Library
+      run: |
+        dotnet build src/MauiNativePdfView/MauiNativePdfView.csproj \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-restore \
+          /p:Version=${{ steps.get_version.outputs.VERSION }}
+    
+    - name: Pack Android Binding
+      run: |
+        dotnet pack src/MauiNativePdfView.Android.Binding/MauiNativePdfView.Android.Binding.csproj \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --output ./artifacts \
+          /p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
+    
+    - name: Pack Main Library
+      run: |
+        dotnet pack src/MauiNativePdfView/MauiNativePdfView.csproj \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --output ./artifacts \
+          /p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./artifacts/*.nupkg
+    
+    - name: Publish to NuGet
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        dotnet nuget push ./artifacts/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+    
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./artifacts/*.nupkg
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

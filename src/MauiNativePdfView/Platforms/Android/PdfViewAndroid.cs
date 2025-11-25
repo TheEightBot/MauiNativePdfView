@@ -236,6 +236,12 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
     public event EventHandler<PdfTappedEventArgs>? Tapped;
     public event EventHandler<RenderedEventArgs>? Rendered;
+    
+    /// <summary>
+    /// This event is not supported on Android with the current AhmerPdfium library.
+    /// Annotation tap detection is only available on iOS.
+    /// </summary>
+    public event EventHandler<AnnotationTappedEventArgs>? AnnotationTapped;
 
     public void GoToPage(int pageIndex)
     {

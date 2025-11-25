@@ -45,7 +45,8 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Best quality (ARGB_8888)       | ✅                    | ✅ (default)  | ✅                     | ✅ Phase 4 Complete       |
 | Background color               | ✅                    | ✅            | ✅                     | ✅ Phase 4 Complete       |
 | **Annotations & Rendering**    |                       |               |                        |                           |
-| Annotation rendering           | ✅                    | ✅ (default)  | ✅                     | ✅ Phase 7 Complete       |
+| Annotation rendering           | ✅                    | ✅ (default)  | ✅                     | ✅ Phase 7.1 Complete     |
+| Annotation events              | ❌                    | ✅            | ⚠️                      | ✅ Phase 7.2 Complete (iOS)|
 | Password protection            | ✅                    | ✅            | ✅                     | ✅ Phase 5.2 Complete     |
 | Custom drawing (onDraw)        | ✅                    | ✅            | ❌                     | **Advanced Feature**      |
 | Custom drawing all pages       | ✅                    | ✅            | ❌                     | **Advanced Feature**      |
@@ -167,7 +168,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 
 **Goal:** Enable PDF annotation rendering and basic interaction
 
-**Status:** Phase 7.1 complete - Annotation rendering implemented
+**Status:** ✅ Phase 7 COMPLETE - Annotation rendering and events implemented (iOS full support, Android rendering only)
 
 #### 7.1 Annotation Rendering ✅ **COMPLETE**
 - ✅ Added `EnableAnnotationRendering` property (default: true)
@@ -183,10 +184,26 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 - ✅ Sample app includes PDF with annotations for testing
 - ✅ Merged to main
 
-#### 7.2 Annotation Events
-- Add `AnnotationTappedEventArgs` with annotation details
-- Add `AnnotationTapped` event
-- Both platforms: Report annotation type and content
+#### 7.2 Annotation Events ✅ **COMPLETE**
+- ✅ Added `AnnotationTappedEventArgs` class with:
+  - `PageIndex`: The 0-based page index
+  - `AnnotationType`: String representation of annotation type (e.g., "Text", "Ink", "Highlight")
+  - `Contents`: Text content of the annotation
+  - `Bounds`: Rectangle with X, Y, Width, Height in page coordinates
+  - `Handled`: Flag to prevent default annotation behavior
+- ✅ Added `AnnotationTapped` event to `IPdfView` interface
+- ✅ **iOS:** Full implementation using PdfKit's `AnnotationHitNotification`
+  - Subscribes to PdfKit's built-in annotation tap notification
+  - Extracts annotation object and properties from notification
+  - Fires event with complete annotation details
+  - Works seamlessly with PdfKit's annotation interaction
+- ⚠️ **Android:** Event defined but not functional with AhmerPdfium library
+  - Library lacks annotation tap detection API
+  - Event subscription works but will never fire
+  - Documented as iOS-only feature
+- ✅ Sample app displays annotation info when tapped (iOS)
+- ✅ Full property mapping and event forwarding in handlers
+- ✅ Merged to main
 
 ### Features We're Skipping (Out of Scope)
 
@@ -329,9 +346,9 @@ For each phase:
 | Phase 5.2 | Password Support | 0.5 days | ✅ Complete |
 | Phase 6 | Document Metadata | N/A | ❌ Cancelled |
 | Phase 7.1 | Annotation Rendering | 0.5 days | ✅ Complete |
-| Phase 7.2 | Annotation Events | 0.5 days | 📋 Planned |
+| Phase 7.2 | Annotation Events | 0.5 days | ✅ Complete (iOS) |
 
-**Total remaining**: ~0.5 days for Phase 7.2
+**Total remaining**: 0 days - All planned phases complete!
 **Notes:** 
 - Night Mode feature removed from scope (iOS incompatibility)
 - Enhanced Metadata feature cancelled (Android library bug)

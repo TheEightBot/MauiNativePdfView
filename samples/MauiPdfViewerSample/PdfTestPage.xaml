@@ -77,7 +77,8 @@
                          PageChanged="OnPageChanged"
                          Error="OnError"
                          Tapped="OnPdfTapped"
-                         Rendered="OnPdfRendered" />
+                         Rendered="OnPdfRendered"
+                         AnnotationTapped="OnAnnotationTapped" />
         </Border>
 
         <!-- Status bar -->
@@ -92,6 +93,11 @@
                    HorizontalOptions="Center"
                    FontSize="12"
                    TextColor="DarkBlue" />
+            <Label x:Name="AnnotationInfoLabel" 
+                   Text="" 
+                   HorizontalOptions="Center"
+                   FontSize="12"
+                   TextColor="DarkGreen" />
         </VerticalStackLayout>
         
     </Grid>

@@ -149,3 +149,46 @@ public class RenderedEventArgs : EventArgs
         PageCount = pageCount;
     }
 }
+
+/// <summary>
+/// Event arguments for annotation tapped event.
+/// </summary>
+public class AnnotationTappedEventArgs : EventArgs
+{
+    /// <summary>
+    /// Gets the page index where the annotation is located (0-based).
+    /// </summary>
+    public int PageIndex { get; }
+
+    /// <summary>
+    /// Gets the annotation type (e.g., "Text", "Highlight", "Ink", "FreeText").
+    /// May be null if the type cannot be determined.
+    /// </summary>
+    public string? AnnotationType { get; }
+
+    /// <summary>
+    /// Gets the text contents of the annotation.
+    /// May be null or empty if the annotation has no text content.
+    /// </summary>
+    public string? Contents { get; }
+
+    /// <summary>
+    /// Gets the bounds rectangle of the annotation in page coordinates.
+    /// Contains X, Y, Width, and Height of the annotation.
+    /// </summary>
+    public Rect Bounds { get; }
+
+    /// <summary>
+    /// Gets or sets whether the annotation tap has been handled.
+    /// Set to true to prevent default annotation behavior.
+    /// </summary>
+    public bool Handled { get; set; }
+
+    public AnnotationTappedEventArgs(int pageIndex, string? annotationType, string? contents, Rect bounds)
+    {
+        PageIndex = pageIndex;
+        AnnotationType = annotationType;
+        Contents = contents;
+        Bounds = bounds;
+    }
+}

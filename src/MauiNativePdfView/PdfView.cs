@@ -355,6 +355,12 @@ public class PdfView : View
     public event EventHandler<RenderedEventArgs>? Rendered;
 
     /// <summary>
+    /// Occurs when an annotation is tapped in the PDF.
+    /// Platform availability: iOS only. Android does not support annotation tap detection with the current library.
+    /// </summary>
+    public event EventHandler<AnnotationTappedEventArgs>? AnnotationTapped;
+
+    /// <summary>
     /// Navigates to the specified page.
     /// </summary>
     public void GoToPage(int pageIndex)
@@ -401,6 +407,11 @@ public class PdfView : View
     internal void RaiseRendered(RenderedEventArgs args)
     {
         Rendered?.Invoke(this, args);
+    }
+
+    internal void RaiseAnnotationTapped(AnnotationTappedEventArgs args)
+    {
+        AnnotationTapped?.Invoke(this, args);
     }
 
     private static void OnSourceChanged(BindableObject bindable, object oldValue, object newValue)

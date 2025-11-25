@@ -128,6 +128,12 @@ public interface IPdfView
     event EventHandler<RenderedEventArgs>? Rendered;
 
     /// <summary>
+    /// Occurs when an annotation is tapped in the PDF.
+    /// Platform availability: iOS only. Android does not support annotation tap detection with the current library.
+    /// </summary>
+    event EventHandler<AnnotationTappedEventArgs>? AnnotationTapped;
+
+    /// <summary>
     /// Navigates to the specified page.
     /// </summary>
     /// <param name="pageIndex">The 0-based page index.</param>

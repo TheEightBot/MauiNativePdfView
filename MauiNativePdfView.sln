@@ -13,6 +13,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiPdfViewerSample", "samples\MauiPdfViewerSample\MauiPdfViewerSample.csproj", "{228303D7-B8AE-4FA2-855C-2AAFFDE57B93}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[ Solution ]", "[ Solution ]", "{60337624-26AA-48BD-9789-0C5C5CEE8AF6}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		.gitignore = .gitignore
+		README.md = README.md
+		.github\workflows\publish.yml = .github\workflows\publish.yml
+		images\icon.png = images\icon.png
+		images\icon.svg = images\icon.svg
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
