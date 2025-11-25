@@ -95,10 +95,10 @@ jobs:
           --skip-duplicate
     
     - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: ncipollo/release-action@v1
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
       with:
-        artifacts: "./artifacts/*.nupkg"
-        generateReleaseNotes: true
-        allowUpdates: true
-        makeLatest: true
+        files: ./artifacts/*.nupkg
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
