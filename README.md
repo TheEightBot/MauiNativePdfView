@@ -36,6 +36,7 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 ## ✨ Features
 
 ### Core Functionality
+
 - ✅ **Multiple PDF Sources** - Load from files, URLs, streams, byte arrays, or embedded assets
 - ✅ **Password Protection** - Full support for encrypted PDFs
 - ✅ **Zoom & Gestures** - Pinch-to-zoom, double-tap zoom, with configurable min/max levels
@@ -45,6 +46,7 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 - ✅ **Scroll Orientation** - Vertical or horizontal page layout
 
 ### Advanced Features
+
 - ✅ **Annotation Rendering** - Toggle PDF annotations on/off
 - ✅ **Annotation Events** - Tap detection with annotation details (iOS)
 - ✅ **Quality Control** - Antialiasing and rendering quality settings
@@ -53,6 +55,7 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 - ✅ **Event System** - Comprehensive events for document lifecycle
 
 ### Events
+
 - `DocumentLoaded` - Fires when PDF is loaded with page count and metadata
 - `PageChanged` - Current page and total page count updates
 - `LinkTapped` - User taps on a link with URI and destination
@@ -64,16 +67,19 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 ## 📦 Installation
 
 ### NuGet Package Manager
+
 ```bash
 dotnet add package MauiNativePdfView
 ```
 
 ### Package Manager Console
+
 ```powershell
 Install-Package MauiNativePdfView
 ```
 
 ### Requirements
+
 - **.NET 9.0** or later
 - **iOS 12.2+** (PDFKit)
 - **Android 7.0+** (API 24+)
@@ -138,26 +144,26 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 
 ### PdfView Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `Source` | `PdfSource` | `null` | PDF source to display |
-| `EnableZoom` | `bool` | `true` | Enable pinch-to-zoom |
-| `EnableSwipe` | `bool` | `true` | Enable swipe gestures |
-| `EnableLinkNavigation` | `bool` | `true` | Enable clickable links |
-| `Zoom` | `float` | `1.0f` | Current zoom level |
-| `MinZoom` | `float` | `1.0f` | Minimum zoom level |
-| `MaxZoom` | `float` | `3.0f` | Maximum zoom level |
-| `PageSpacing` | `int` | `10` | Spacing between pages (pixels) |
-| `FitPolicy` | `FitPolicy` | `Width` | How pages fit on screen |
-| `DisplayMode` | `PdfDisplayMode` | `SinglePageContinuous` | Page display mode |
-| `ScrollOrientation` | `PdfScrollOrientation` | `Vertical` | Scroll direction |
-| `DefaultPage` | `int` | `0` | Initial page (0-based) |
-| `EnableAntialiasing` | `bool` | `true` | Antialiasing (Android only) |
-| `UseBestQuality` | `bool` | `true` | Best quality rendering |
-| `BackgroundColor` | `Color` | `null` | Viewer background color |
-| `EnableAnnotationRendering` | `bool` | `true` | Show PDF annotations |
-| `CurrentPage` | `int` | `0` | Current page (readonly) |
-| `PageCount` | `int` | `0` | Total pages (readonly) |
+| Property                    | Type                   | Default                | Description                    |
+| --------------------------- | ---------------------- | ---------------------- | ------------------------------ |
+| `Source`                    | `PdfSource`            | `null`                 | PDF source to display          |
+| `EnableZoom`                | `bool`                 | `true`                 | Enable pinch-to-zoom           |
+| `EnableSwipe`               | `bool`                 | `true`                 | Enable swipe gestures          |
+| `EnableLinkNavigation`      | `bool`                 | `true`                 | Enable clickable links         |
+| `Zoom`                      | `float`                | `1.0f`                 | Current zoom level             |
+| `MinZoom`                   | `float`                | `1.0f`                 | Minimum zoom level             |
+| `MaxZoom`                   | `float`                | `3.0f`                 | Maximum zoom level             |
+| `PageSpacing`               | `int`                  | `10`                   | Spacing between pages (pixels) |
+| `FitPolicy`                 | `FitPolicy`            | `Width`                | How pages fit on screen        |
+| `DisplayMode`               | `PdfDisplayMode`       | `SinglePageContinuous` | Page display mode              |
+| `ScrollOrientation`         | `PdfScrollOrientation` | `Vertical`             | Scroll direction               |
+| `DefaultPage`               | `int`                  | `0`                    | Initial page (0-based)         |
+| `EnableAntialiasing`        | `bool`                 | `true`                 | Antialiasing (Android only)    |
+| `UseBestQuality`            | `bool`                 | `true`                 | Best quality rendering         |
+| `BackgroundColor`           | `Color`                | `null`                 | Viewer background color        |
+| `EnableAnnotationRendering` | `bool`                 | `true`                 | Show PDF annotations           |
+| `CurrentPage`               | `int`                  | `0`                    | Current page (readonly)        |
+| `PageCount`                 | `int`                  | `0`                    | Total pages (readonly)         |
 
 ### PdfSource Types
 
@@ -223,9 +229,9 @@ pdfViewer.Reload();
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
              x:Class="MyApp.PdfPage">
-    
+
     <Grid RowDefinitions="Auto,*,Auto">
-        
+
         <!-- Toolbar -->
         <HorizontalStackLayout Grid.Row="0" Padding="10" Spacing="10">
             <Button Text="◀" Clicked="OnPreviousPage" />
@@ -233,7 +239,7 @@ pdfViewer.Reload();
             <Button Text="Zoom In" Clicked="OnZoomIn" />
             <Button Text="Zoom Out" Clicked="OnZoomOut" />
         </HorizontalStackLayout>
-        
+
         <!-- PDF Viewer -->
         <pdf:PdfView x:Name="pdfViewer"
                      Grid.Row="1"
@@ -247,14 +253,14 @@ pdfViewer.Reload();
                      PageChanged="OnPageChanged"
                      LinkTapped="OnLinkTapped"
                      Error="OnError" />
-        
+
         <!-- Status Bar -->
         <Label x:Name="statusLabel"
                Grid.Row="2"
                Padding="10"
                HorizontalOptions="Center" />
     </Grid>
-    
+
 </ContentPage>
 ```
 
@@ -266,17 +272,17 @@ public partial class PdfPage : ContentPage
         InitializeComponent();
         pdfViewer.Source = PdfSource.FromAsset("sample.pdf");
     }
-    
+
     private void OnDocumentLoaded(object sender, DocumentLoadedEventArgs e)
     {
         statusLabel.Text = $"Loaded: {e.PageCount} pages - {e.Title}";
     }
-    
+
     private void OnPageChanged(object sender, PageChangedEventArgs e)
     {
         statusLabel.Text = $"Page {e.PageIndex + 1} of {e.PageCount}";
     }
-    
+
     private void OnLinkTapped(object sender, LinkTappedEventArgs e)
     {
         if (e.Uri != null)
@@ -290,29 +296,29 @@ public partial class PdfPage : ContentPage
             // Internal link - handled automatically
         }
     }
-    
+
     private void OnError(object sender, PdfErrorEventArgs e)
     {
         DisplayAlert("Error", e.Message, "OK");
     }
-    
+
     private void OnPreviousPage(object sender, EventArgs e)
     {
         if (pdfViewer.CurrentPage > 0)
             pdfViewer.GoToPage(pdfViewer.CurrentPage - 1);
     }
-    
+
     private void OnNextPage(object sender, EventArgs e)
     {
         if (pdfViewer.CurrentPage < pdfViewer.PageCount - 1)
             pdfViewer.GoToPage(pdfViewer.CurrentPage + 1);
     }
-    
+
     private void OnZoomIn(object sender, EventArgs e)
     {
         pdfViewer.Zoom = Math.Min(pdfViewer.Zoom + 0.5f, pdfViewer.MaxZoom);
     }
-    
+
     private void OnZoomOut(object sender, EventArgs e)
     {
         pdfViewer.Zoom = Math.Max(pdfViewer.Zoom - 0.5f, pdfViewer.MinZoom);
@@ -328,39 +334,39 @@ public class PdfViewModel : INotifyPropertyChanged
     private PdfSource _pdfSource;
     private int _currentPage;
     private int _pageCount;
-    
+
     public PdfSource PdfSource
     {
         get => _pdfSource;
         set => SetProperty(ref _pdfSource, value);
     }
-    
+
     public int CurrentPage
     {
         get => _currentPage;
         set => SetProperty(ref _currentPage, value);
     }
-    
+
     public int PageCount
     {
         get => _pageCount;
         set => SetProperty(ref _pageCount, value);
     }
-    
+
     public Command LoadPdfCommand { get; }
     public Command<int> GoToPageCommand { get; }
-    
+
     public PdfViewModel()
     {
         LoadPdfCommand = new Command(LoadPdf);
         GoToPageCommand = new Command<int>(GoToPage);
     }
-    
+
     private void LoadPdf()
     {
         PdfSource = PdfSource.FromAsset("document.pdf");
     }
-    
+
     private void GoToPage(int pageIndex)
     {
         // Page navigation handled by binding
@@ -397,7 +403,7 @@ private void OnAnnotationTapped(object sender, AnnotationTappedEventArgs e)
     Console.WriteLine($"Type: {e.AnnotationType}");
     Console.WriteLine($"Contents: {e.Contents}");
     Console.WriteLine($"Bounds: {e.Bounds}");
-    
+
     // Prevent default behavior
     e.Handled = true;
 }
@@ -436,12 +442,14 @@ private void OnAnnotationTapped(object sender, AnnotationTappedEventArgs e)
 ## 🔧 Platform Details
 
 ### iOS (PDFKit)
+
 - **Framework**: Apple's native PDFKit
 - **Version**: iOS 12.2+
 - **Features**: Full annotation support, smooth rendering
 - **Size**: 0 KB (system framework)
 
 ### Android (AhmerPdfium)
+
 - **Library**: [AhmerPdfium](https://github.com/AhmerAfzal1/AhmerPdfium) by Ahmer Afzal
 - **Base**: Enhanced fork of [AndroidPdfViewer](https://github.com/barteksc/AndroidPdfViewer)
 - **Version**: 2.0.1 (viewer) + 1.9.2 (pdfium)
