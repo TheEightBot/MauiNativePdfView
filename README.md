@@ -6,8 +6,8 @@
 
 ### A high-performance, cross-platform PDF viewer for .NET MAUI
 
-[![NuGet](https://img.shields.io/nuget/v/MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
+[![NuGet](https://img.shields.io/nuget/v/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download)
 [![MAUI](https://img.shields.io/badge/MAUI-Latest-green.svg)](https://github.com/dotnet/maui)
