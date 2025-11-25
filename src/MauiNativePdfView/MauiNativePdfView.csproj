@@ -27,7 +27,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls"
-                          Version="9.0.120" />
+                          Version="9.0.0" />
     </ItemGroup>
     <!-- Package content -->
     <ItemGroup>

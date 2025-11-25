@@ -2,107 +2,309 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="MauiPdfViewerSample.PdfTestPage"
-             Title="PDF Test">
-    <Grid RowDefinitions="Auto,*,Auto"
-          Padding="10">
-        <!-- Header with controls -->
-        <VerticalStackLayout Grid.Row="0"
-                             Spacing="10"
-                             Padding="0,0,0,10">
-            <Label Text="PDF Viewer Test"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center" />
-            <HorizontalStackLayout Spacing="10"
-                                   HorizontalOptions="Center">
-                <Button x:Name="LoadFileButton"
-                        Text="Load Sample PDF"
-                        Clicked="OnLoadFileClicked" />
-                <Button x:Name="LoadAnnotationFileButton"
-                        Text="Load Annotations PDF"
-                        Clicked="OnLoadAnnotationFileClicked" />
-                <Button x:Name="PrevPageButton"
-                        Text="◀ Prev"
-                        Clicked="OnPrevPageClicked"
-                        IsEnabled="False" />
-                <Button x:Name="NextPageButton"
-                        Text="Next ▶"
-                        Clicked="OnNextPageClicked"
-                        IsEnabled="False" />
-            </HorizontalStackLayout>
-            <!-- New Phase 4 Features -->
-            <HorizontalStackLayout Spacing="10"
-                                   HorizontalOptions="Center">
-                <Label Text="Orientation:"
-                       VerticalOptions="Center" />
-                <Button x:Name="ToggleOrientationButton"
-                        Text="Toggle (Vertical)"
-                        Clicked="OnToggleOrientationClicked" />
-                <Label Text="Background:"
-                       VerticalOptions="Center"
-                       Margin="20,0,0,0" />
-                <Button x:Name="ToggleBackgroundButton"
-                        Text="Change"
-                        Clicked="OnToggleBackgroundClicked" />
-            </HorizontalStackLayout>
-            <!-- New Phase 5 Features -->
-            <HorizontalStackLayout Spacing="10"
-                                   HorizontalOptions="Center">
-                <Label Text="Display Mode:"
-                       VerticalOptions="Center" />
-                <Button x:Name="ToggleDisplayModeButton"
-                        Text="Single Page Continuous"
-                        Clicked="OnToggleDisplayModeClicked" />
-            </HorizontalStackLayout>
-            <!-- New Phase 7 Features -->
-            <HorizontalStackLayout Spacing="10"
-                                   HorizontalOptions="Center">
-                <Label Text="Annotations:"
-                       VerticalOptions="Center" />
-                <Button x:Name="ToggleAnnotationsButton"
-                        Text="Enabled"
-                        Clicked="OnToggleAnnotationsClicked" />
-            </HorizontalStackLayout>
+             Title="PDF Experience">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="SurfaceColor">#0F172A</Color>
+            <Color x:Key="SurfaceAltColor">#111826</Color>
+            <Color x:Key="CardColor">#0B1220</Color>
+            <Color x:Key="AccentColor">#38BDF8</Color>
+            <Color x:Key="MutedColor">#94A3B8</Color>
+            <Color x:Key="BorderColor">#1E293B</Color>
+
+            <Style TargetType="Button" x:Key="PrimaryActionButtonStyle">
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="BackgroundColor" Value="#38BDF8" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="18,12" />
+                <Setter Property="MinimumHeightRequest" Value="48" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="GhostButtonStyle">
+                <Setter Property="TextColor" Value="#38BDF8" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="BorderColor" Value="#38BDF8" />
+                <Setter Property="BorderWidth" Value="1" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="18,12" />
+                <Setter Property="MinimumHeightRequest" Value="48" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="IconButtonStyle">
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="BackgroundColor" Value="#1D2437" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="WidthRequest" Value="48" />
+                <Setter Property="HeightRequest" Value="44" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView BackgroundColor="{StaticResource SurfaceColor}">
+        <VerticalStackLayout Spacing="20"
+                             Padding="20,20,20,32">
+            <!-- Lean hero copy so phones see controls immediately -->
+            <Border Padding="20"
+                    StrokeThickness="1"
+                    Stroke="{StaticResource BorderColor}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="24" />
+                </Border.StrokeShape>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#182247" Offset="0" />
+                        <GradientStop Color="#050A18" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Document Intelligence"
+                           FontSize="12"
+                           TextColor="{StaticResource AccentColor}"
+                           FontAttributes="Bold" />
+                    <Label Text="PDF Experience"
+                           FontSize="22"
+                           TextColor="White"
+                           FontAttributes="Bold" />
+                    <Label Text="Essential controls and live preview in a layout tuned for phones."
+                           TextColor="{StaticResource MutedColor}"
+                           FontSize="13" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Quick actions keep primary workflow above the fold -->
+            <Border Padding="18"
+                    BackgroundColor="{StaticResource CardColor}"
+                    StrokeThickness="1"
+                    Stroke="{StaticResource BorderColor}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Quick actions"
+                               TextColor="White"
+                               FontAttributes="Bold"
+                               FontSize="16" />
+                        <Label x:Name="PageInfoLabel"
+                               Text="Ready"
+                               TextColor="{StaticResource MutedColor}"
+                               FontSize="12"
+                               HorizontalOptions="End" />
+                    </Grid>
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="12">
+                        <Button x:Name="LoadFileButton"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Text="Load sample"
+                                Clicked="OnLoadFileClicked" />
+                        <Button x:Name="LoadAnnotationFileButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Text="Load annotated"
+                                Clicked="OnLoadAnnotationFileClicked" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="12">
+                        <Button x:Name="PrevPageButton"
+                                Text="◀ Prev"
+                                Style="{StaticResource IconButtonStyle}"
+                                WidthRequest="100"
+                                IsEnabled="False"
+                                Clicked="OnPrevPageClicked" />
+                        <Button x:Name="NextPageButton"
+                                Text="Next ▶"
+                                Style="{StaticResource IconButtonStyle}"
+                                WidthRequest="100"
+                                IsEnabled="False"
+                                Clicked="OnNextPageClicked" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Viewer stays central, with lean height for portrait -->
+            <Border x:Name="ViewerBorder"
+                    Padding="20"
+                    StrokeThickness="1"
+                    Stroke="{StaticResource BorderColor}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="28" />
+                </Border.StrokeShape>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#0E1426" Offset="0" />
+                        <GradientStop Color="#050A18" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid RowDefinitions="Auto,*" RowSpacing="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Live document"
+                               FontSize="17"
+                               TextColor="White"
+                               FontAttributes="Bold" />
+                        <Label x:Name="LinkStatusLabel"
+                               Text="Links idle"
+                               TextColor="{StaticResource AccentColor}"
+                               FontSize="12"
+                               HorizontalOptions="End" />
+                    </Grid>
+                    <Border Grid.Row="1"
+                            BackgroundColor="#050A18"
+                            StrokeThickness="1"
+                            Stroke="{StaticResource BorderColor}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20" />
+                        </Border.StrokeShape>
+                        <pdf:PdfView x:Name="PdfViewer"
+                                     HeightRequest="460"
+                                     HorizontalOptions="FillAndExpand"
+                                     VerticalOptions="FillAndExpand"
+                                     EnableZoom="True"
+                                     EnableSwipe="True"
+                                     EnableTapGestures="False"
+                                     PageSpacing="10"
+                                     EnableAntialiasing="True"
+                                     UseBestQuality="True"
+                                     EnableAnnotationRendering="True"
+                                     DocumentLoaded="OnDocumentLoaded"
+                                     PageChanged="OnPageChanged"
+                                     Error="OnError"
+                                     Tapped="OnPdfTapped"
+                                     Rendered="OnPdfRendered"
+                                     AnnotationTapped="OnAnnotationTapped"
+                                     LinkTapped="OnLinkTapped" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Collapsible advanced controls keep UI tidy -->
+            <toolkit:Expander IsExpanded="True">
+                <toolkit:Expander.Header>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Label Text="Reading preferences"
+                               TextColor="White"
+                               FontAttributes="Bold"
+                               FontSize="15"
+                               Grid.Column="0" />
+                        <Label Text="Orientation, background, modes"
+                               TextColor="{StaticResource MutedColor}"
+                               FontSize="12"
+                               HorizontalOptions="End"
+                               Grid.Column="1"/>
+                    </Grid>
+                </toolkit:Expander.Header>
+                <VerticalStackLayout Padding="0,12,0,0" Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="Orientation"
+                               TextColor="#CBD5F5"
+                               VerticalOptions="Center"
+                               Grid.Column="0" />
+                        <Button x:Name="ToggleOrientationButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Text="Toggle (Vertical)"
+                                Clicked="OnToggleOrientationClicked"
+                                Grid.Column="1"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="Background"
+                               TextColor="#CBD5F5"
+                               VerticalOptions="Center"
+                               Grid.Column="0"/>
+                        <Button x:Name="ToggleBackgroundButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Text="Change"
+                                Clicked="OnToggleBackgroundClicked"
+                                Grid.Column="1"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="Display"
+                               TextColor="#CBD5F5"
+                               VerticalOptions="Center"
+                               Grid.Column="0"/>
+                        <Button x:Name="ToggleDisplayModeButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Text="Single Page Continuous"
+                                Clicked="OnToggleDisplayModeClicked"
+                                Grid.Column="1"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="Annotations"
+                               TextColor="#CBD5F5"
+                               VerticalOptions="Center"
+                               Grid.Column="0"/>
+                        <Button x:Name="ToggleAnnotationsButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Text="Enabled"
+                                Clicked="OnToggleAnnotationsClicked"
+                                Grid.Column="1"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="Tap gestures"
+                               TextColor="#CBD5F5"
+                               VerticalOptions="Center"
+                               Grid.Column="0"/>
+                        <Button x:Name="ToggleTapGesturesButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Text="Tap events disabled"
+                                Clicked="OnToggleTapGesturesClicked"
+                                Grid.Column="1"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </toolkit:Expander>
+
+            <!-- Insights stay available but tucked away -->
+            <toolkit:Expander IsExpanded="True">
+                <toolkit:Expander.Header>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Label Text="Document insights"
+                               TextColor="White"
+                               FontAttributes="Bold"
+                               FontSize="15"
+                               Grid.Column="0"/>
+                        <Label Text="Status, annotations"
+                               TextColor="{StaticResource MutedColor}"
+                               FontSize="12"
+                               HorizontalOptions="End"
+                               Grid.Column="1"/>
+                    </Grid>
+                </toolkit:Expander.Header>
+                <VerticalStackLayout Padding="0,12,0,0" Spacing="12">
+                    <Border Padding="14"
+                            BackgroundColor="{StaticResource CardColor}"
+                            StrokeThickness="1"
+                            Stroke="{StaticResource BorderColor}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="18" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Status"
+                                   TextColor="#E2E8F0"
+                                   FontAttributes="Bold" />
+                            <Label x:Name="StatusLabel"
+                                   Text="Ready - load a document to begin"
+                                   TextColor="{StaticResource MutedColor}"
+                                   FontSize="13" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Padding="14"
+                            BackgroundColor="{StaticResource CardColor}"
+                            StrokeThickness="1"
+                            Stroke="{StaticResource BorderColor}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="18" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Annotations"
+                                   TextColor="#E2E8F0"
+                                   FontAttributes="Bold" />
+                            <Label x:Name="AnnotationInfoLabel"
+                                   Text=""
+                                   TextColor="{StaticResource MutedColor}"
+                                   FontSize="13" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </toolkit:Expander>
         </VerticalStackLayout>
-        <!-- PDF Viewer -->
-        <Border Grid.Row="1"
-                Stroke="Gray"
-                StrokeThickness="1"
-                BackgroundColor="White">
-            <pdf:PdfView x:Name="PdfViewer"
-                         EnableZoom="True"
-                         EnableSwipe="True"
-                         PageSpacing="10"
-                         EnableAntialiasing="True"
-                         UseBestQuality="True"
-                         EnableAnnotationRendering="True"
-                         DocumentLoaded="OnDocumentLoaded"
-                         PageChanged="OnPageChanged"
-                         Error="OnError"
-                         Tapped="OnPdfTapped"
-                         Rendered="OnPdfRendered"
-                         AnnotationTapped="OnAnnotationTapped" />
-        </Border>
-        <!-- Status bar -->
-        <VerticalStackLayout Grid.Row="2"
-                             Spacing="5"
-                             Padding="0,10,0,0">
-            <Label x:Name="StatusLabel"
-                   Text="Ready - Tap 'Load Sample PDF' to begin"
-                   HorizontalOptions="Center"
-                   FontSize="12"
-                   TextColor="Gray" />
-            <Label x:Name="PageInfoLabel"
-                   Text=""
-                   HorizontalOptions="Center"
-                   FontSize="12"
-                   TextColor="DarkBlue" />
-            <Label x:Name="AnnotationInfoLabel"
-                   Text=""
-                   HorizontalOptions="Center"
-                   FontSize="12"
-                   TextColor="DarkGreen" />
-        </VerticalStackLayout>
-    </Grid>
+    </ScrollView>
 </ContentPage>

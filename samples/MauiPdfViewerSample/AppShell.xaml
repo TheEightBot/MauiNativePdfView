@@ -6,9 +6,10 @@
     xmlns:local="clr-namespace:MauiPdfViewerSample"
     Title="MauiPdfViewerSample">
 
+    <!-- Make PdfTestPage the app's main ShellContent -->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="PDF Viewer"
+        ContentTemplate="{DataTemplate local:PdfTestPage}"
+        Route="PdfTestPage" />
 
 </Shell>

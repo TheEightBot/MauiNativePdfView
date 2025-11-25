@@ -32,6 +32,6 @@
     <ItemGroup>
         <!-- Kotlin standard library dependency -->
         <PackageReference Include="Xamarin.Kotlin.StdLib"
-                          Version="2.1.0" />
+                          Version="2.1.21" />
     </ItemGroup>
 </Project>

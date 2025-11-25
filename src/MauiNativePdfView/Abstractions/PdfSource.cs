@@ -53,7 +53,7 @@ public sealed class FilePdfSource : PdfSource
     {
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
-        
+
         FilePath = filePath;
     }
 }
@@ -110,7 +110,7 @@ public sealed class AssetPdfSource : PdfSource
     {
         if (string.IsNullOrWhiteSpace(assetName))
             throw new ArgumentException("Asset name cannot be null or empty.", nameof(assetName));
-        
+
         AssetName = assetName;
     }
 }

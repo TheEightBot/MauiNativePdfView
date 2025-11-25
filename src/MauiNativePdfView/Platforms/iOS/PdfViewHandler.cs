@@ -16,6 +16,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         [nameof(PdfView.Source)] = MapSource,
         [nameof(PdfView.EnableZoom)] = MapEnableZoom,
         [nameof(PdfView.EnableSwipe)] = MapEnableSwipe,
+        [nameof(PdfView.EnableTapGestures)] = MapEnableTapGestures,
         [nameof(PdfView.EnableLinkNavigation)] = MapEnableLinkNavigation,
         [nameof(PdfView.Zoom)] = MapZoom,
         [nameof(PdfView.MinZoom)] = MapMinZoom,
@@ -72,6 +73,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
             _pdfViewWrapper.Source = VirtualView.Source;
             _pdfViewWrapper.EnableZoom = VirtualView.EnableZoom;
             _pdfViewWrapper.EnableSwipe = VirtualView.EnableSwipe;
+            _pdfViewWrapper.EnableTapGestures = VirtualView.EnableTapGestures;
             _pdfViewWrapper.EnableLinkNavigation = VirtualView.EnableLinkNavigation;
             _pdfViewWrapper.Zoom = VirtualView.Zoom;
             _pdfViewWrapper.MinZoom = VirtualView.MinZoom;
@@ -161,6 +163,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.EnableSwipe = view.EnableSwipe;
+        }
+    }
+
+    public static void MapEnableTapGestures(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.EnableTapGestures = view.EnableTapGestures;
         }
     }
 

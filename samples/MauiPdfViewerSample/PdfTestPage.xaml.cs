@@ -1,4 +1,5 @@
 using MauiNativePdfView.Abstractions;
+using Microsoft.Maui.ApplicationModel;
 
 namespace MauiPdfViewerSample;
 
@@ -82,6 +83,7 @@ public partial class PdfTestPage : ContentPage
     {
         StatusLabel.Text = $"Document loaded successfully!";
         PageInfoLabel.Text = $"Page 1 of {e.PageCount}";
+        LinkStatusLabel.Text = "Links ready";
         UpdateButtonStates();
     }
 
@@ -94,6 +96,7 @@ public partial class PdfTestPage : ContentPage
     private void OnError(object? sender, PdfErrorEventArgs e)
     {
         StatusLabel.Text = $"Error: {e.Message}";
+        LinkStatusLabel.Text = "Link status unavailable";
         DisplayAlert("PDF Error", e.Message, "OK");
     }
 
@@ -154,10 +157,82 @@ public partial class PdfTestPage : ContentPage
         StatusLabel.Text = $"Annotation rendering: {(PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled")}";
     }
 
+    private void OnToggleTapGesturesClicked(object? sender, EventArgs e)
+    {
+        PdfViewer.EnableTapGestures = !PdfViewer.EnableTapGestures;
+        ToggleTapGesturesButton.Text = PdfViewer.EnableTapGestures ? "Tap events enabled" : "Tap events disabled";
+        StatusLabel.Text = PdfViewer.EnableTapGestures
+            ? "Tap gestures routed to sample"
+            : "Tap gestures forwarded to links";
+    }
+
     private void OnAnnotationTapped(object? sender, AnnotationTappedEventArgs e)
     {
         var contents = string.IsNullOrEmpty(e.Contents) ? "(no content)" : e.Contents;
         AnnotationInfoLabel.Text = $"Annotation tapped on page {e.PageIndex + 1}: Type={e.AnnotationType}, Contents={contents}";
         StatusLabel.Text = $"Annotation tapped: {e.AnnotationType}";
+    }
+
+    private async void OnLinkTapped(object? sender, LinkTappedEventArgs e)
+    {
+        var linkDescription = !string.IsNullOrEmpty(e.Uri)
+            ? e.Uri
+            : e.DestinationPage.HasValue
+                ? $"Page {e.DestinationPage.Value + 1}"
+                : "document link";
+
+        LinkStatusLabel.Text = $"Intercepted: {linkDescription}";
+        StatusLabel.Text = "Link tapped – choose an action";
+
+        var actions = new List<string>();
+        if (!string.IsNullOrEmpty(e.Uri))
+        {
+            actions.Add("Open externally");
+        }
+
+        if (e.DestinationPage.HasValue)
+        {
+            actions.Add("Go to destination page");
+        }
+
+        var choice = await DisplayActionSheet("Handle link", "Dismiss", null, actions.ToArray());
+
+        switch (choice)
+        {
+            case "Open externally" when !string.IsNullOrEmpty(e.Uri):
+                if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri))
+                {
+                    try
+                    {
+                        await Launcher.OpenAsync(uri);
+                        StatusLabel.Text = "Link opened in browser";
+                        LinkStatusLabel.Text = $"Launched: {uri.Host}";
+                    }
+                    catch (Exception ex)
+                    {
+                        StatusLabel.Text = "Unable to launch link";
+                        await DisplayAlert("Link", $"Failed to open {uri}: {ex.Message}", "OK");
+                        LinkStatusLabel.Text = "Launch failed";
+                    }
+                }
+                else
+                {
+                    StatusLabel.Text = "Invalid link";
+                    await DisplayAlert("Link", "The tapped link is not a valid URI.", "OK");
+                    LinkStatusLabel.Text = "Invalid URI";
+                }
+                break;
+            case "Go to destination page" when e.DestinationPage.HasValue:
+                PdfViewer.GoToPage(e.DestinationPage.Value);
+                e.Handled = true;
+                StatusLabel.Text = $"Navigated to page {e.DestinationPage.Value + 1}";
+                LinkStatusLabel.Text = "Internal link handled";
+                break;
+            default:
+                e.Handled = true;
+                StatusLabel.Text = "Link dismissed";
+                LinkStatusLabel.Text = "Links idle";
+                break;
+        }
     }
 }

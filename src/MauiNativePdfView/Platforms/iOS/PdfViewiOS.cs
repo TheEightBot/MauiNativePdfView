@@ -20,6 +20,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     private int _defaultPage = 0;
     private bool _documentLoaded = false;
     private bool _enableAnnotationRendering = true;
+    private bool _enableTapGestures = true;
 
     public PdfViewiOS()
     {
@@ -85,6 +86,32 @@ public class PdfViewiOS : IPdfView, IDisposable
     }
 
     public bool EnableSwipe { get; set; } = true;
+
+    public bool EnableTapGestures
+    {
+        get => _enableTapGestures;
+        set
+        {
+            if (_enableTapGestures == value)
+            {
+                return;
+            }
+
+            _enableTapGestures = value;
+
+            if (_tapGestureRecognizer != null)
+            {
+                if (_enableTapGestures && !_pdfView.GestureRecognizers.Contains(_tapGestureRecognizer))
+                {
+                    _pdfView.AddGestureRecognizer(_tapGestureRecognizer);
+                }
+                else if (!_enableTapGestures && _pdfView.GestureRecognizers.Contains(_tapGestureRecognizer))
+                {
+                    _pdfView.RemoveGestureRecognizer(_tapGestureRecognizer);
+                }
+            }
+        }
+    }
 
     public bool EnableLinkNavigation
     {
@@ -445,7 +472,17 @@ public class PdfViewiOS : IPdfView, IDisposable
             var pageIndex = (int)_pdfView.Document.GetPageIndex(page);
 
             // Extract annotation information
-            var annotationType = annotation.AnnotationType.ToString() ?? "Unknown";
+            string annotationType;
+            try
+            {
+                annotationType = annotation.AnnotationType.ToString();
+            }
+            catch (NotSupportedException)
+            {
+                // Use the runtime class name when PdfKit lacks a managed enum for the annotation.
+                var runtimeName = annotation.GetType()?.Name;
+                annotationType = !string.IsNullOrEmpty(runtimeName) ? $"Custom({runtimeName})" : "Unknown";
+            }
             var contents = annotation.Contents ?? string.Empty;
             var bounds = annotation.Bounds;
 

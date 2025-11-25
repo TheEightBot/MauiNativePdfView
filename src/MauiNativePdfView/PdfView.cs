@@ -39,6 +39,16 @@ public class PdfView : View
             true);
 
     /// <summary>
+    /// Bindable property for enabling tap gesture interception (used for PdfTapped event).
+    /// </summary>
+    public static readonly BindableProperty EnableTapGesturesProperty =
+        BindableProperty.Create(
+            nameof(EnableTapGestures),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
     /// Bindable property for enabling link navigation.
     /// </summary>
     public static readonly BindableProperty EnableLinkNavigationProperty =
@@ -149,16 +159,6 @@ public class PdfView : View
             true);
 
     /// <summary>
-    /// Bindable property for background color.
-    /// </summary>
-    public static readonly BindableProperty BackgroundColorProperty =
-        BindableProperty.Create(
-            nameof(BackgroundColor),
-            typeof(Color),
-            typeof(PdfView),
-            null);
-
-    /// <summary>
     /// Bindable property for annotation rendering.
     /// </summary>
     public static readonly BindableProperty EnableAnnotationRenderingProperty =
@@ -193,6 +193,16 @@ public class PdfView : View
     {
         get => (bool)GetValue(EnableSwipeProperty);
         set => SetValue(EnableSwipeProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether tap gestures should be intercepted to raise <see cref="PdfTapped"/>.
+    /// Disable this to allow platform link handling without custom tap interception.
+    /// </summary>
+    public bool EnableTapGestures
+    {
+        get => (bool)GetValue(EnableTapGesturesProperty);
+        set => SetValue(EnableTapGesturesProperty, value);
     }
 
     /// <summary>
