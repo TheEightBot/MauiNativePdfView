@@ -46,6 +46,22 @@ public partial class PdfTestPage : ContentPage
         }
     }
 
+    private void OnLoadAnnotationFileClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            StatusLabel.Text = "Loading PDF with annotations...";
+            
+            // Load PDF with annotations from raw asset
+            PdfViewer.Source = PdfSource.FromAsset("sample_with_annotations.pdf");
+        }
+        catch (Exception ex)
+        {
+            StatusLabel.Text = $"Error: {ex.Message}";
+            DisplayAlert("Error", $"Failed to load PDF: {ex.Message}", "OK");
+        }
+    }
+
     private void OnPrevPageClicked(object? sender, EventArgs e)
     {
         if (PdfViewer.CurrentPage > 0)
@@ -128,5 +144,13 @@ public partial class PdfTestPage : ContentPage
         PdfViewer.DisplayMode = _displayModes[_displayModeIndex];
         ToggleDisplayModeButton.Text = _displayModeNames[_displayModeIndex];
         StatusLabel.Text = $"Display mode: {_displayModeNames[_displayModeIndex]}";
+    }
+
+    // New Phase 7 event handler
+    private void OnToggleAnnotationsClicked(object? sender, EventArgs e)
+    {
+        PdfViewer.EnableAnnotationRendering = !PdfViewer.EnableAnnotationRendering;
+        ToggleAnnotationsButton.Text = PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled";
+        StatusLabel.Text = $"Annotation rendering: {(PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled")}";
     }
 }

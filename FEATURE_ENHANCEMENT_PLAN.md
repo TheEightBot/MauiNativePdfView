@@ -45,7 +45,7 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 | Best quality (ARGB_8888)       | ✅                    | ✅ (default)  | ✅                     | ✅ Phase 4 Complete       |
 | Background color               | ✅                    | ✅            | ✅                     | ✅ Phase 4 Complete       |
 | **Annotations & Rendering**    |                       |               |                        |                           |
-| Annotation rendering           | ✅                    | ✅ (default)  | ❌                     | ✅ To Add (Phase 7)       |
+| Annotation rendering           | ✅                    | ✅ (default)  | ✅                     | ✅ Phase 7 Complete       |
 | Password protection            | ✅                    | ✅            | ✅                     | ✅ Phase 5.2 Complete     |
 | Custom drawing (onDraw)        | ✅                    | ✅            | ❌                     | **Advanced Feature**      |
 | Custom drawing all pages       | ✅                    | ✅            | ❌                     | **Advanced Feature**      |
@@ -167,11 +167,21 @@ We aim to provide a consistent API across iOS and Android wherever reasonably po
 
 **Goal:** Enable PDF annotation rendering and basic interaction
 
-#### 7.1 Annotation Rendering
-- Add `EnableAnnotationRendering` property
-- Render PDF annotations, forms, comments
-- **Android:** Use `enableAnnotationRendering()` configurator
-- **iOS:** Enabled by default, add toggle if possible
+**Status:** Phase 7.1 complete - Annotation rendering implemented
+
+#### 7.1 Annotation Rendering ✅ **COMPLETE**
+- ✅ Added `EnableAnnotationRendering` property (default: true)
+- ✅ **Android:** Uses `enableAnnotationRendering()` configurator
+  - Separated from link navigation (previously bundled)
+  - Triggers document reload when changed
+  - Preserves current page on reload
+- ✅ **iOS:** Controls annotation display via `ShouldDisplay` property
+  - Iterates through all page annotations and sets visibility
+  - Forces view refresh to update display
+  - Fully functional toggle on both platforms
+- ✅ Property mapping on both platforms
+- ✅ Sample app includes PDF with annotations for testing
+- ✅ Merged to main
 
 #### 7.2 Annotation Events
 - Add `AnnotationTappedEventArgs` with annotation details
@@ -318,9 +328,10 @@ For each phase:
 | Phase 5.1 | Display Mode | 0.5 days | ✅ Complete |
 | Phase 5.2 | Password Support | 0.5 days | ✅ Complete |
 | Phase 6 | Document Metadata | N/A | ❌ Cancelled |
-| Phase 7 | Annotations | 1 day | 📋 Planned |
+| Phase 7.1 | Annotation Rendering | 0.5 days | ✅ Complete |
+| Phase 7.2 | Annotation Events | 0.5 days | 📋 Planned |
 
-**Total remaining**: ~1 day for Phase 7
+**Total remaining**: ~0.5 days for Phase 7.2
 **Notes:** 
 - Night Mode feature removed from scope (iOS incompatibility)
 - Enhanced Metadata feature cancelled (Android library bug)

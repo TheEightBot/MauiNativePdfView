@@ -27,7 +27,8 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         [nameof(PdfView.DefaultPage)] = MapDefaultPage,
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
-        [nameof(PdfView.BackgroundColor)] = MapBackgroundColor
+        [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
+        [nameof(PdfView.EnableAnnotationRendering)] = MapEnableAnnotationRendering
     };
 
     public static CommandMapper<PdfView, PdfViewHandler> CommandMapper = new(ViewCommandMapper)
@@ -249,6 +250,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.BackgroundColor = view.BackgroundColor;
+        }
+    }
+
+    public static void MapEnableAnnotationRendering(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.EnableAnnotationRendering = view.EnableAnnotationRendering;
         }
     }
 

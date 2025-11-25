@@ -33,6 +33,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
         [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
+        [nameof(PdfView.EnableAnnotationRendering)] = MapEnableAnnotationRendering,
     };
 
     /// <summary>
@@ -260,6 +261,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         if (handler._pdfViewWrapper != null)
         {
             handler._pdfViewWrapper.BackgroundColor = view.BackgroundColor;
+        }
+    }
+
+    private static void MapEnableAnnotationRendering(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null)
+        {
+            handler._pdfViewWrapper.EnableAnnotationRendering = view.EnableAnnotationRendering;
         }
     }
 

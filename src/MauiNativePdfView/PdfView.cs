@@ -159,6 +159,16 @@ public class PdfView : View
             null);
 
     /// <summary>
+    /// Bindable property for annotation rendering.
+    /// </summary>
+    public static readonly BindableProperty EnableAnnotationRenderingProperty =
+        BindableProperty.Create(
+            nameof(EnableAnnotationRendering),
+            typeof(bool),
+            typeof(PdfView),
+            true);
+
+    /// <summary>
     /// Gets or sets the PDF source to display.
     /// </summary>
     public PdfSource? Source
@@ -291,6 +301,17 @@ public class PdfView : View
     {
         get => (Color?)GetValue(BackgroundColorProperty);
         set => SetValue(BackgroundColorProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets whether PDF annotations (forms, comments, highlights, etc.) should be rendered.
+    /// On Android: Controls whether annotations are displayed.
+    /// On iOS: Always enabled (PdfKit renders annotations by default).
+    /// </summary>
+    public bool EnableAnnotationRendering
+    {
+        get => (bool)GetValue(EnableAnnotationRenderingProperty);
+        set => SetValue(EnableAnnotationRenderingProperty, value);
     }
 
     /// <summary>

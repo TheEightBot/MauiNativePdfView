@@ -32,6 +32,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private bool _enableAntialiasing = true;
     private bool _useBestQuality = true;
     private Color? _backgroundColor;
+    private bool _enableAnnotationRendering = true;
     private int _currentPage = 0;
     private int _pageCount = 0;
 
@@ -215,6 +216,20 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
+    public bool EnableAnnotationRendering
+    {
+        get => _enableAnnotationRendering;
+        set
+        {
+            if (_enableAnnotationRendering != value)
+            {
+                _enableAnnotationRendering = value;
+                if (_pageCount > 0) // Document is loaded
+                    Reload();
+            }
+        }
+    }
+
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
     public event EventHandler<PageChangedEventArgs>? PageChanged;
     public event EventHandler<PdfErrorEventArgs>? Error;
@@ -298,10 +313,14 @@ public class PdfViewAndroid : IPdfView, IDisposable
         // Note: UseBestQuality sets rendering quality (ARGB_8888 vs RGB_565)
         // This is handled by the PDFView configuration automatically based on device capabilities
 
+        if (_enableAnnotationRendering)
+        {
+            configurator.EnableAnnotationRendering(true);
+        }
+
         if (_enableLinkNavigation)
         {
-            configurator.EnableAnnotationRendering(true)
-                       .LinkHandler(new LinkHandlerImpl(this));
+            configurator.LinkHandler(new LinkHandlerImpl(this));
         }
 
         configurator.Load();

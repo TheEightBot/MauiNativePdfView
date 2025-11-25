@@ -91,6 +91,13 @@ public interface IPdfView
     Color? BackgroundColor { get; set; }
 
     /// <summary>
+    /// Gets or sets whether PDF annotations (forms, comments, highlights, etc.) should be rendered.
+    /// On Android: Controls whether annotations are displayed.
+    /// On iOS: Always enabled (PdfKit renders annotations by default).
+    /// </summary>
+    bool EnableAnnotationRendering { get; set; }
+
+    /// <summary>
     /// Occurs when the document has finished loading.
     /// </summary>
     event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;

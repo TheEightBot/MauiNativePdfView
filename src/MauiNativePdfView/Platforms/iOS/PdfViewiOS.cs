@@ -18,6 +18,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     private PdfScrollOrientation _scrollOrientation = PdfScrollOrientation.Vertical;
     private int _defaultPage = 0;
     private bool _documentLoaded = false;
+    private bool _enableAnnotationRendering = true;
 
     public PdfViewiOS()
     {
@@ -202,6 +203,19 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
     }
 
+    public bool EnableAnnotationRendering
+    {
+        get => _enableAnnotationRendering;
+        set
+        {
+            if (_enableAnnotationRendering != value)
+            {
+                _enableAnnotationRendering = value;
+                UpdateAnnotationVisibility();
+            }
+        }
+    }
+
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
     public event EventHandler<PageChangedEventArgs>? PageChanged;
     public event EventHandler<PdfErrorEventArgs>? Error;
@@ -339,6 +353,9 @@ public class PdfViewiOS : IPdfView, IDisposable
                 var currentPageIndex = _defaultPage > 0 && _defaultPage < pageCount ? _defaultPage : 0;
                 PageChanged?.Invoke(this, new PageChangedEventArgs(currentPageIndex, pageCount));
 
+                // Apply annotation visibility setting
+                UpdateAnnotationVisibility();
+
                 // Fire rendered event after a short delay to ensure rendering is complete
                 if (!_documentLoaded)
                 {
@@ -361,6 +378,29 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             Error?.Invoke(this, new PdfErrorEventArgs($"Error loading PDF: {ex.Message}", ex));
         }
+    }
+
+    private void UpdateAnnotationVisibility()
+    {
+        if (_pdfView.Document == null)
+            return;
+
+        // Iterate through all pages and hide/show annotations
+        for (nint i = 0; i < _pdfView.Document.PageCount; i++)
+        {
+            var page = _pdfView.Document.GetPage(i);
+            if (page?.Annotations != null)
+            {
+                foreach (var annotation in page.Annotations)
+                {
+                    // Set annotation to hidden or visible
+                    annotation.ShouldDisplay = _enableAnnotationRendering;
+                }
+            }
+        }
+
+        // Force refresh the view
+        _pdfView.SetNeedsDisplay();
     }
 
     private void OnPageChangedNotification(NSNotification notification)

@@ -18,6 +18,9 @@
                 <Button x:Name="LoadFileButton" 
                         Text="Load Sample PDF" 
                         Clicked="OnLoadFileClicked" />
+                <Button x:Name="LoadAnnotationFileButton" 
+                        Text="Load Annotations PDF" 
+                        Clicked="OnLoadAnnotationFileClicked" />
                 <Button x:Name="PrevPageButton" 
                         Text="◀ Prev" 
                         Clicked="OnPrevPageClicked"
@@ -48,6 +51,14 @@
                         Text="Single Page Continuous"
                         Clicked="OnToggleDisplayModeClicked" />
             </HorizontalStackLayout>
+
+            <!-- New Phase 7 Features -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="Annotations:" VerticalOptions="Center" />
+                <Button x:Name="ToggleAnnotationsButton"
+                        Text="Enabled"
+                        Clicked="OnToggleAnnotationsClicked" />
+            </HorizontalStackLayout>
         </VerticalStackLayout>
 
         <!-- PDF Viewer -->
@@ -61,6 +72,7 @@
                          PageSpacing="10"
                          EnableAntialiasing="True"
                          UseBestQuality="True"
+                         EnableAnnotationRendering="True"
                          DocumentLoaded="OnDocumentLoaded"
                          PageChanged="OnPageChanged"
                          Error="OnError"
