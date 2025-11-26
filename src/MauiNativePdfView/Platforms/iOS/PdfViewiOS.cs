@@ -40,6 +40,9 @@ public class PdfViewiOS : IPdfView, IDisposable
         // Subscribe to annotation hit notifications
         _annotationHitObserver = PdfKit.PdfView.Notifications.ObserveAnnotationHit(OnAnnotationHit);
 
+        // Set delegate to intercept link clicks
+        _pdfView.WeakDelegate = new PdfViewDelegateImpl(this);
+
         // Add tap gesture recognizer
         _tapGestureRecognizer = new UITapGestureRecognizer(HandleTap);
         _pdfView.AddGestureRecognizer(_tapGestureRecognizer);
@@ -548,6 +551,43 @@ public class PdfViewiOS : IPdfView, IDisposable
             _tapGestureRecognizer = null;
         }
 
+        _pdfView.WeakDelegate = null;
         _pdfView?.Dispose();
     }
+
+    /// <summary>
+    /// Delegate implementation to intercept link clicks in PDFView.
+    /// </summary>
+    private class PdfViewDelegateImpl : PdfViewDelegate
+    {
+        private readonly WeakReference<PdfViewiOS> _owner;
+
+        public PdfViewDelegateImpl(PdfViewiOS owner)
+        {
+            _owner = new WeakReference<PdfViewiOS>(owner);
+        }
+
+        [Export("PDFViewWillClickOnLink:withURL:")]
+        public void WillClickOnLink(PdfKit.PdfView sender, NSUrl url)
+        {
+            if (!_owner.TryGetTarget(out var owner))
+            {
+                return;
+            }
+
+            // Fire the LinkTapped event
+            var args = new LinkTappedEventArgs(url.AbsoluteString, null);
+            owner.LinkTapped?.Invoke(owner, args);
+
+            // If the event was not handled and navigation is enabled, open the URL
+            if (!args.Handled && owner.EnableLinkNavigation)
+            {
+                UIKit.UIApplication.SharedApplication.OpenUrl(url);
+            }
+        }
+    }
 }
+
+
+
+

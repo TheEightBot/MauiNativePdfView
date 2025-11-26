@@ -98,13 +98,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
             _enableTapGestures = value;
 
-            if (!_enableTapGestures)
+            if (_pageCount > 0)
             {
-                _pdfView.SetOnTapListener(null);
-            }
-            else if (_tapListener != null)
-            {
-                _pdfView.SetOnTapListener(_tapListener);
+                Reload();
             }
         }
     }
@@ -341,14 +337,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
             .OnError(new ErrorListener(this))
             .OnTap(_enableTapGestures ? _tapListener ??= new TapListener(this) : null)
             .OnRender(new RenderListener(this));
-        if (_enableTapGestures && _tapListener == null)
-        {
-            _tapListener = new TapListener(this);
-        }
-        if (_enableTapGestures && _tapListener != null)
-        {
-            _pdfView.SetOnTapListener(_tapListener);
-        }
 
         // Note: UseBestQuality sets rendering quality (ARGB_8888 vs RGB_565)
         // This is handled by the PDFView configuration automatically based on device capabilities
@@ -522,12 +510,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private class TapListener : Java.Lang.Object, IOnTapListener
     {
         private readonly WeakReference<PdfViewAndroid> _viewRef;
-        private readonly WeakReference<PDFView> _nativeViewRef;
 
         public TapListener(PdfViewAndroid view)
         {
             _viewRef = new WeakReference<PdfViewAndroid>(view);
-            _nativeViewRef = new WeakReference<PDFView>(view._pdfView);
         }
 
         public bool OnTap(MotionEvent? e)
@@ -536,12 +522,8 @@ public class PdfViewAndroid : IPdfView, IDisposable
             {
                 view.OnTapped(view.CurrentPage, e.GetX(), e.GetY());
             }
-            if (_nativeViewRef.TryGetTarget(out var nativeView))
-            {
-                return nativeView.HandleTap(e);
-            }
 
-            return false; // fallback to default gesture pipeline
+            return false; // allow PDFView to continue default handling (links, etc.)
         }
     }
 
@@ -569,7 +551,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
     {
         if (_tapListener != null)
         {
-            _pdfView.SetOnTapListener(null);
             _tapListener.Dispose();
             _tapListener = null;
         }

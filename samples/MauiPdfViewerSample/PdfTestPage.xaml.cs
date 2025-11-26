@@ -175,6 +175,8 @@ public partial class PdfTestPage : ContentPage
 
     private async void OnLinkTapped(object? sender, LinkTappedEventArgs e)
     {
+        e.Handled = true;
+
         var linkDescription = !string.IsNullOrEmpty(e.Uri)
             ? e.Uri
             : e.DestinationPage.HasValue

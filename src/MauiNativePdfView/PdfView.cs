@@ -46,7 +46,7 @@ public class PdfView : View
             nameof(EnableTapGestures),
             typeof(bool),
             typeof(PdfView),
-            true);
+            false);
 
     /// <summary>
     /// Bindable property for enabling link navigation.

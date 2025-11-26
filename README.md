@@ -8,6 +8,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download)
 [![MAUI](https://img.shields.io/badge/MAUI-Latest-green.svg)](https://github.com/dotnet/maui)
@@ -41,6 +42,7 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 - ✅ **Password Protection** - Full support for encrypted PDFs
 - ✅ **Zoom & Gestures** - Pinch-to-zoom, double-tap zoom, with configurable min/max levels
 - ✅ **Page Navigation** - Swipe between pages, programmatic navigation, page events
+- ✅ **Link Interception** - Intercept and handle link taps before navigation (both platforms)
 - ✅ **Link Handling** - Automatic detection and handling of internal/external links
 - ✅ **Display Modes** - Single page or continuous scrolling
 - ✅ **Scroll Orientation** - Vertical or horizontal page layout
@@ -49,6 +51,7 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 
 - ✅ **Annotation Rendering** - Toggle PDF annotations on/off
 - ✅ **Annotation Events** - Tap detection with annotation details (iOS)
+- ✅ **Tap Gesture Control** - Enable/disable custom tap interception
 - ✅ **Quality Control** - Antialiasing and rendering quality settings
 - ✅ **Background Color** - Customizable viewer background
 - ✅ **Page Spacing** - Adjustable spacing between pages
@@ -58,8 +61,8 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 
 - `DocumentLoaded` - Fires when PDF is loaded with page count and metadata
 - `PageChanged` - Current page and total page count updates
-- `LinkTapped` - User taps on a link with URI and destination
-- `Tapped` - General tap events with page coordinates
+- `LinkTapped` - Intercept link taps before navigation (set `e.Handled = true` to prevent)
+- `Tapped` - General tap events with page coordinates (requires `EnableTapGestures = true`)
 - `AnnotationTapped` - Annotation tap with type, content, and bounds (iOS)
 - `Rendered` - Initial rendering complete
 - `Error` - Error handling with detailed messages
@@ -149,6 +152,7 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 | `Source`                    | `PdfSource`            | `null`                 | PDF source to display          |
 | `EnableZoom`                | `bool`                 | `true`                 | Enable pinch-to-zoom           |
 | `EnableSwipe`               | `bool`                 | `true`                 | Enable swipe gestures          |
+| `EnableTapGestures`         | `bool`                 | `false`                | Enable tap interception        |
 | `EnableLinkNavigation`      | `bool`                 | `true`                 | Enable clickable links         |
 | `Zoom`                      | `float`                | `1.0f`                 | Current zoom level             |
 | `MinZoom`                   | `float`                | `1.0f`                 | Minimum zoom level             |
@@ -287,13 +291,17 @@ public partial class PdfPage : ContentPage
     {
         if (e.Uri != null)
         {
-            // Handle external link
+            // Intercept and handle external link yourself
+            DisplayAlert("Link Tapped", $"Opening: {e.Uri}", "OK");
             Launcher.OpenAsync(e.Uri);
+            
+            // Prevent default navigation
             e.Handled = true;
         }
         else if (e.DestinationPage.HasValue)
         {
-            // Internal link - handled automatically
+            // Internal link - allow default navigation
+            // Or set e.Handled = true to prevent it
         }
     }
 
@@ -394,6 +402,57 @@ catch (Exception ex)
 }
 ```
 
+### Link Interception
+
+Both iOS and Android support intercepting link taps before navigation occurs. This allows you to handle links yourself or prevent navigation entirely.
+
+```csharp
+pdfViewer.LinkTapped += (sender, e) =>
+{
+    Console.WriteLine($"Link tapped: {e.Uri}");
+    
+    if (e.Uri?.Contains("example.com") == true)
+    {
+        // Custom handling for specific domain
+        DisplayAlert("Info", "This link is not allowed", "OK");
+        e.Handled = true; // Prevent navigation
+    }
+    else if (e.Uri != null)
+    {
+        // Log analytics before opening
+        Analytics.TrackEvent("PDF_Link_Clicked", new Dictionary<string, string>
+        {
+            { "Uri", e.Uri }
+        });
+        
+        // Allow default navigation (or handle manually)
+        e.Handled = false;
+    }
+};
+```
+
+**Platform Implementation:**
+- **iOS**: Uses `PdfViewDelegate.WillClickOnLink` to intercept before navigation
+- **Android**: Uses `LinkHandler.HandleLinkEvent` to intercept before navigation
+
+### Tap Gesture Handling
+
+Enable custom tap detection with page coordinates:
+
+```csharp
+pdfViewer.EnableTapGestures = true;
+
+pdfViewer.Tapped += (sender, e) =>
+{
+    Console.WriteLine($"Tapped page {e.PageIndex} at ({e.X}, {e.Y})");
+    
+    // Add your custom tap handling logic
+    // For example: show a custom menu, add annotations, etc.
+};
+```
+
+**Note**: When `EnableTapGestures = false` (default), the PDF viewer uses native platform tap handling which is optimized for link detection.
+
 ### Annotation Handling (iOS)
 
 ```csharp
@@ -404,9 +463,95 @@ private void OnAnnotationTapped(object sender, AnnotationTappedEventArgs e)
     Console.WriteLine($"Contents: {e.Contents}");
     Console.WriteLine($"Bounds: {e.Bounds}");
 
-    // Prevent default behavior
+    // Prevent default behavior if needed
     e.Handled = true;
 }
+```
+
+**Note**: Annotation tap detection is only supported on iOS with PDFKit. Android's AhmerPdfium library does not expose annotation tap events.
+
+## 🎯 Common Scenarios
+
+### Restrict External Navigation
+
+```csharp
+pdfViewer.LinkTapped += (sender, e) =>
+{
+    if (e.Uri != null && e.Uri.StartsWith("http"))
+    {
+        DisplayAlert("Restricted", "External links are not allowed", "OK");
+        e.Handled = true; // Block navigation
+    }
+};
+```
+
+### Track Link Clicks for Analytics
+
+```csharp
+pdfViewer.LinkTapped += (sender, e) =>
+{
+    // Log the link click
+    Analytics.TrackEvent("PDF_Link_Clicked", new Dictionary<string, string>
+    {
+        { "Document", pdfViewer.Source?.ToString() ?? "Unknown" },
+        { "Link", e.Uri ?? $"Page {e.DestinationPage}" },
+        { "CurrentPage", pdfViewer.CurrentPage.ToString() }
+    });
+    
+    // Allow normal navigation
+    e.Handled = false;
+};
+```
+
+### Custom Link Handling with Confirmation
+
+```csharp
+pdfViewer.LinkTapped += async (sender, e) =>
+{
+    if (e.Uri != null)
+    {
+        var result = await DisplayAlert(
+            "Open Link?", 
+            $"Do you want to open {e.Uri}?", 
+            "Yes", 
+            "No"
+        );
+        
+        if (result)
+        {
+            await Launcher.OpenAsync(e.Uri);
+        }
+        
+        e.Handled = true; // Prevent default navigation
+    }
+};
+```
+
+### Deep Link Handling
+
+```csharp
+pdfViewer.LinkTapped += async (sender, e) =>
+{
+    if (e.Uri?.StartsWith("myapp://") == true)
+    {
+        // Handle custom URL scheme
+        await Shell.Current.GoToAsync(e.Uri.Replace("myapp://", ""));
+        e.Handled = true;
+    }
+};
+```
+
+### Disable All Link Navigation
+
+```csharp
+// Simple approach
+pdfViewer.EnableLinkNavigation = false;
+
+// Or intercept all links
+pdfViewer.LinkTapped += (sender, e) =>
+{
+    e.Handled = true; // Block all navigation
+};
 ```
 
 ## 🏗️ Architecture
@@ -445,7 +590,8 @@ private void OnAnnotationTapped(object sender, AnnotationTappedEventArgs e)
 
 - **Framework**: Apple's native PDFKit
 - **Version**: iOS 12.2+
-- **Features**: Full annotation support, smooth rendering
+- **Features**: Full annotation support, smooth rendering, link interception via `PdfViewDelegate`
+- **Link Handling**: Native `WillClickOnLink` delegate method
 - **Size**: 0 KB (system framework)
 
 ### Android (AhmerPdfium)
@@ -453,7 +599,8 @@ private void OnAnnotationTapped(object sender, AnnotationTappedEventArgs e)
 - **Library**: [AhmerPdfium](https://github.com/AhmerAfzal1/AhmerPdfium) by Ahmer Afzal
 - **Base**: Enhanced fork of [AndroidPdfViewer](https://github.com/barteksc/AndroidPdfViewer)
 - **Version**: 2.0.1 (viewer) + 1.9.2 (pdfium)
-- **Features**: 16KB page size support, reliable rendering
+- **Features**: 16KB page size support, reliable rendering, link interception via `LinkHandler`
+- **Link Handling**: Custom `ILinkHandler` implementation
 - **Size**: ~16MB (native libraries for all architectures)
 - **Note**: Annotation tap events not supported by library
 
@@ -471,7 +618,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ### Building from Source
 
 ```bash
-git clone https://github.com/yourusername/MauiNativePdfView.git
+git clone https://github.com/TheEightBot/MauiNativePdfView.git
 cd MauiNativePdfView
 dotnet restore
 dotnet build
@@ -484,9 +631,40 @@ cd samples/MauiPdfViewerSample
 dotnet build
 ```
 
-## 📝 Changelog
+## ❓ Troubleshooting
 
-See [FEATURE_ENHANCEMENT_PLAN.md](FEATURE_ENHANCEMENT_PLAN.md) for detailed implementation history and feature roadmap.
+### Links Not Working on iOS
+
+If links are not responding on iOS, ensure:
+1. `EnableLinkNavigation = true` (default)
+2. The PDF actually contains link annotations
+3. You're not setting `e.Handled = true` for all links in the `LinkTapped` event
+
+### Tapped Event Not Firing
+
+The `Tapped` event requires:
+```csharp
+pdfViewer.EnableTapGestures = true;
+```
+
+**Note**: When `EnableTapGestures = true`, it may interfere with native link handling on some platforms. For link detection only, keep it `false` (default) and use the `LinkTapped` event.
+
+### LinkTapped Event Handler Not Called
+
+Ensure you're subscribing to the event:
+```csharp
+pdfViewer.LinkTapped += OnLinkTapped;
+```
+
+Or in XAML:
+```xml
+<pdf:PdfView LinkTapped="OnLinkTapped" />
+```
+
+### Android Annotation Events
+
+Annotation tap events (`AnnotationTapped`) are **only supported on iOS**. The Android AhmerPdfium library does not expose annotation-level tap detection. Use the `Tapped` event as an alternative for Android.
+
 
 ## 📄 License
 
@@ -506,9 +684,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Support
 
-- 📖 [Documentation](https://github.com/yourusername/MauiNativePdfView/wiki)
-- 🐛 [Issue Tracker](https://github.com/yourusername/MauiNativePdfView/issues)
-- 💬 [Discussions](https://github.com/yourusername/MauiNativePdfView/discussions)
+- 🐛 [Issue Tracker](https://github.com/TheEightBot/MauiNativePdfView/issues)
 
 ## ⭐ Show Your Support
 
