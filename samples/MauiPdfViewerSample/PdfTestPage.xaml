@@ -156,6 +156,7 @@
                             <RoundRectangle CornerRadius="20" />
                         </Border.StrokeShape>
                         <pdf:PdfView x:Name="PdfViewer"
+                                     Source="sample.pdf"
                                      HeightRequest="460"
                                      HorizontalOptions="FillAndExpand"
                                      VerticalOptions="FillAndExpand"
