@@ -12,7 +12,8 @@ namespace MauiNativePdfView.Abstractions;
 /// <item><description>URLs (http:// or https://) → UriPdfSource</description></item>
 /// <item><description>Asset paths (asset://) → AssetPdfSource</description></item>
 /// <item><description>File URIs (file://) → FilePdfSource</description></item>
-/// <item><description>Other strings → treated as file paths → FilePdfSource</description></item>
+/// <item><description>Simple filenames (no path separators) → AssetPdfSource</description></item>
+/// <item><description>Other strings → FilePdfSource</description></item>
 /// </list>
 /// </remarks>
 public class PdfSourceTypeConverter : TypeConverter
