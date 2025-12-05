@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Microsoft.Maui.Controls;
 
 // Define custom XAML namespace schema for MauiNativePdfView
@@ -9,7 +8,4 @@ using Microsoft.Maui.Controls;
 [assembly: XmlnsDefinition("http://eightbot.com/maui/pdfview", "MauiNativePdfView.Abstractions")]
 
 // Suggest "pdf" as the default prefix when users add this namespace
-[assembly: XmlnsPrefix("http://eightbot.com/maui/pdfview", "pdf")]
-
-// Ensure types are preserved during linking
-[assembly: Preserve(AllMembers = true)]
+[assembly: Microsoft.Maui.Controls.XmlnsPrefix("http://eightbot.com/maui/pdfview", "pdf")]
