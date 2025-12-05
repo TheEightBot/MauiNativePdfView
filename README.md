@@ -91,6 +91,12 @@ Install-Package MauiNativePdfView
 
 ### 1. Add Namespace
 
+**Option A: Custom Schema (Recommended)**
+```xml
+xmlns:pdf="http://eightbot.com/maui/pdfview"
+```
+
+**Option B: CLR Namespace**
 ```xml
 xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
 ```
@@ -98,6 +104,10 @@ xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
 ### 2. Basic XAML
 
 ```xml
+<!-- Simple string binding - auto-converts to PdfSource! -->
+<pdf:PdfView Source="https://example.com/document.pdf" />
+
+<!-- Or with full control -->
 <pdf:PdfView x:Name="pdfViewer"
              EnableZoom="True"
              EnableSwipe="True"
@@ -105,7 +115,25 @@ xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
              PageChanged="OnPageChanged" />
 ```
 
-### 3. Load a PDF
+### String to PdfSource Conversion
+
+The library supports automatic string conversion in XAML:
+
+```xml
+<!-- URL - automatically becomes UriPdfSource -->
+<pdf:PdfView Source="https://example.com/document.pdf" />
+
+<!-- Asset - simple filename becomes AssetPdfSource -->
+<pdf:PdfView Source="sample.pdf" />
+
+<!-- Asset with explicit prefix -->
+<pdf:PdfView Source="asset://documents/guide.pdf" />
+
+<!-- File URI -->
+<pdf:PdfView Source="file:///path/to/document.pdf" />
+```
+
+### 3. Load a PDF (Code-Behind)
 
 ```csharp
 // From file
@@ -171,6 +199,9 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 
 ### PdfSource Types
 
+The `PdfSource` class supports automatic string conversion via implicit operators and TypeConverter, making it easy to use in both XAML and code.
+
+**Factory Methods (Code-Behind):**
 ```csharp
 // File path
 var source = PdfSource.FromFile(string filePath, string? password = null);
@@ -187,6 +218,26 @@ var source = PdfSource.FromBytes(byte[] data, string? password = null);
 // Asset/Resource
 var source = PdfSource.FromAsset(string assetName, string? password = null);
 ```
+
+**Implicit Conversion (Convenient):**
+```csharp
+// String to PdfSource - auto-detects type
+PdfSource source = "https://example.com/doc.pdf";  // → UriPdfSource
+PdfSource source = "sample.pdf";                    // → AssetPdfSource  
+PdfSource source = "/path/to/file.pdf";             // → FilePdfSource
+
+// Uri to PdfSource
+PdfSource source = new Uri("https://example.com/doc.pdf");
+```
+
+**String Conversion Rules:**
+| Pattern | Result |
+|---------|--------|
+| `http://...` or `https://...` | `UriPdfSource` |
+| `asset://filename.pdf` | `AssetPdfSource` |
+| `file:///path/to/file.pdf` | `FilePdfSource` |
+| `filename.pdf` (no path separators) | `AssetPdfSource` |
+| `/path/to/file.pdf` (rooted path) | `FilePdfSource` |
 
 ### Enums
 
