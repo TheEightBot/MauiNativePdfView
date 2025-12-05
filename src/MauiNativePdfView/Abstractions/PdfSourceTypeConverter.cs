@@ -88,7 +88,7 @@ public class PdfSourceTypeConverter : TypeConverter
         // Check for asset:// prefix (custom scheme for embedded assets)
         if (trimmedValue.StartsWith("asset://", StringComparison.OrdinalIgnoreCase))
         {
-            var assetName = trimmedValue.Substring("asset://".Length);
+            var assetName = trimmedValue["asset://".Length..];
             return new AssetPdfSource(assetName);
         }
 
