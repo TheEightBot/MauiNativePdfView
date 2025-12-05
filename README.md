@@ -6,8 +6,8 @@
 
 ### A high-performance, cross-platform PDF viewer for .NET MAUI
 
-[![NuGet](https://img.shields.io/nuget/v/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/MauiNativePdfView/)
+[![NuGet](https://img.shields.io/nuget/v/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/EightBot.MauiNativePdfView/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/EightBot.MauiNativePdfView/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download)
@@ -92,11 +92,13 @@ Install-Package MauiNativePdfView
 ### 1. Add Namespace
 
 **Option A: Custom Schema (Recommended)**
+
 ```xml
 xmlns:pdf="http://eightbot.com/maui/pdfview"
 ```
 
 **Option B: CLR Namespace**
+
 ```xml
 xmlns:pdf="clr-namespace:MauiNativePdfView;assembly=MauiNativePdfView"
 ```
@@ -202,6 +204,7 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 The `PdfSource` class supports automatic string conversion via implicit operators and TypeConverter, making it easy to use in both XAML and code.
 
 **Factory Methods (Code-Behind):**
+
 ```csharp
 // File path
 var source = PdfSource.FromFile(string filePath, string? password = null);
@@ -220,10 +223,11 @@ var source = PdfSource.FromAsset(string assetName, string? password = null);
 ```
 
 **Implicit Conversion (Convenient):**
+
 ```csharp
 // String to PdfSource - auto-detects type
 PdfSource source = "https://example.com/doc.pdf";  // → UriPdfSource
-PdfSource source = "sample.pdf";                    // → AssetPdfSource  
+PdfSource source = "sample.pdf";                    // → AssetPdfSource
 PdfSource source = "/path/to/file.pdf";             // → FilePdfSource
 
 // Uri to PdfSource
@@ -345,7 +349,7 @@ public partial class PdfPage : ContentPage
             // Intercept and handle external link yourself
             DisplayAlert("Link Tapped", $"Opening: {e.Uri}", "OK");
             Launcher.OpenAsync(e.Uri);
-            
+
             // Prevent default navigation
             e.Handled = true;
         }
@@ -461,7 +465,7 @@ Both iOS and Android support intercepting link taps before navigation occurs. Th
 pdfViewer.LinkTapped += (sender, e) =>
 {
     Console.WriteLine($"Link tapped: {e.Uri}");
-    
+
     if (e.Uri?.Contains("example.com") == true)
     {
         // Custom handling for specific domain
@@ -475,7 +479,7 @@ pdfViewer.LinkTapped += (sender, e) =>
         {
             { "Uri", e.Uri }
         });
-        
+
         // Allow default navigation (or handle manually)
         e.Handled = false;
     }
@@ -483,6 +487,7 @@ pdfViewer.LinkTapped += (sender, e) =>
 ```
 
 **Platform Implementation:**
+
 - **iOS**: Uses `PdfViewDelegate.WillClickOnLink` to intercept before navigation
 - **Android**: Uses `LinkHandler.HandleLinkEvent` to intercept before navigation
 
@@ -496,7 +501,7 @@ pdfViewer.EnableTapGestures = true;
 pdfViewer.Tapped += (sender, e) =>
 {
     Console.WriteLine($"Tapped page {e.PageIndex} at ({e.X}, {e.Y})");
-    
+
     // Add your custom tap handling logic
     // For example: show a custom menu, add annotations, etc.
 };
@@ -548,7 +553,7 @@ pdfViewer.LinkTapped += (sender, e) =>
         { "Link", e.Uri ?? $"Page {e.DestinationPage}" },
         { "CurrentPage", pdfViewer.CurrentPage.ToString() }
     });
-    
+
     // Allow normal navigation
     e.Handled = false;
 };
@@ -562,17 +567,17 @@ pdfViewer.LinkTapped += async (sender, e) =>
     if (e.Uri != null)
     {
         var result = await DisplayAlert(
-            "Open Link?", 
-            $"Do you want to open {e.Uri}?", 
-            "Yes", 
+            "Open Link?",
+            $"Do you want to open {e.Uri}?",
+            "Yes",
             "No"
         );
-        
+
         if (result)
         {
             await Launcher.OpenAsync(e.Uri);
         }
-        
+
         e.Handled = true; // Prevent default navigation
     }
 };
@@ -687,6 +692,7 @@ dotnet build
 ### Links Not Working on iOS
 
 If links are not responding on iOS, ensure:
+
 1. `EnableLinkNavigation = true` (default)
 2. The PDF actually contains link annotations
 3. You're not setting `e.Handled = true` for all links in the `LinkTapped` event
@@ -694,6 +700,7 @@ If links are not responding on iOS, ensure:
 ### Tapped Event Not Firing
 
 The `Tapped` event requires:
+
 ```csharp
 pdfViewer.EnableTapGestures = true;
 ```
@@ -703,11 +710,13 @@ pdfViewer.EnableTapGestures = true;
 ### LinkTapped Event Handler Not Called
 
 Ensure you're subscribing to the event:
+
 ```csharp
 pdfViewer.LinkTapped += OnLinkTapped;
 ```
 
 Or in XAML:
+
 ```xml
 <pdf:PdfView LinkTapped="OnLinkTapped" />
 ```
@@ -715,7 +724,6 @@ Or in XAML:
 ### Android Annotation Events
 
 Annotation tap events (`AnnotationTapped`) are **only supported on iOS**. The Android AhmerPdfium library does not expose annotation-level tap detection. Use the `Tapped` event as an alternative for Android.
-
 
 ## 📄 License
 
