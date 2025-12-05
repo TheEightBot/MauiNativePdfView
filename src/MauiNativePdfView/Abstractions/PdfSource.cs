@@ -1,8 +1,22 @@
+using System.ComponentModel;
+
 namespace MauiNativePdfView.Abstractions;
 
 /// <summary>
 /// Base class for PDF source types.
 /// </summary>
+/// <remarks>
+/// Supports implicit conversion from strings and URIs for convenient XAML usage.
+/// String conversion follows these rules:
+/// <list type="bullet">
+/// <item><description>URLs (http:// or https://) → UriPdfSource</description></item>
+/// <item><description>Asset paths (asset://) → AssetPdfSource</description></item>
+/// <item><description>File URIs (file://) → FilePdfSource</description></item>
+/// <item><description>Simple filenames → AssetPdfSource</description></item>
+/// <item><description>Full paths → FilePdfSource</description></item>
+/// </list>
+/// </remarks>
+[TypeConverter(typeof(PdfSourceTypeConverter))]
 public abstract class PdfSource
 {
     /// <summary>
@@ -10,6 +24,60 @@ public abstract class PdfSource
     /// Leave null or empty for non-encrypted PDFs.
     /// </summary>
     public string? Password { get; set; }
+
+    /// <summary>
+    /// Implicitly converts a string to a PdfSource.
+    /// </summary>
+    /// <param name="source">The source string (URL, asset path, or file path).</param>
+    public static implicit operator PdfSource?(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+            return null;
+
+        var trimmedValue = source.Trim();
+
+        // HTTP/HTTPS URLs
+        if (trimmedValue.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            trimmedValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return new UriPdfSource(new Uri(trimmedValue));
+        }
+
+        // Asset prefix
+        if (trimmedValue.StartsWith("asset://", StringComparison.OrdinalIgnoreCase))
+        {
+            return new AssetPdfSource(trimmedValue.Substring("asset://".Length));
+        }
+
+        // File URI
+        if (trimmedValue.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+        {
+            return new FilePdfSource(new Uri(trimmedValue).LocalPath);
+        }
+
+        // Simple filename (no path separators) → treat as asset
+        if (!Path.IsPathRooted(trimmedValue) &&
+            !trimmedValue.Contains(Path.DirectorySeparatorChar) &&
+            !trimmedValue.Contains(Path.AltDirectorySeparatorChar))
+        {
+            return new AssetPdfSource(trimmedValue);
+        }
+
+        // Default to file path
+        return new FilePdfSource(trimmedValue);
+    }
+
+    /// <summary>
+    /// Implicitly converts a Uri to a PdfSource.
+    /// </summary>
+    /// <param name="uri">The URI to convert.</param>
+    public static implicit operator PdfSource?(Uri? uri)
+    {
+        if (uri == null)
+            return null;
+
+        return new UriPdfSource(uri);
+    }
 
     /// <summary>
     /// Creates a PDF source from a file path.
