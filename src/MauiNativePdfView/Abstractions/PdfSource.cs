@@ -46,7 +46,7 @@ public abstract class PdfSource
         // Asset prefix
         if (trimmedValue.StartsWith("asset://", StringComparison.OrdinalIgnoreCase))
         {
-            return new AssetPdfSource(trimmedValue.Substring("asset://".Length));
+            return new AssetPdfSource(trimmedValue["asset://".Length..]);
         }
 
         // File URI
