@@ -58,6 +58,9 @@ public class PdfViewiOS : IPdfView, IDisposable
         get => _source;
         set
         {
+            if (ReferenceEquals(_source, value))
+                return;
+
             _source = value;
             LoadDocument();
         }
@@ -303,12 +306,7 @@ public class PdfViewiOS : IPdfView, IDisposable
                     break;
 
                 case StreamPdfSource streamSource:
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        streamSource.Stream.CopyTo(memoryStream);
-                        var data = NSData.FromArray(memoryStream.ToArray());
-                        document = new PdfDocument(data);
-                    }
+                    document = new PdfDocument(NSData.FromStream(streamSource.Stream));
                     break;
 
                 case BytesPdfSource bytesSource:
@@ -360,7 +358,7 @@ public class PdfViewiOS : IPdfView, IDisposable
                     }
                 }
 
-                _pdfView.Document = document;
+                MainThread.BeginInvokeOnMainThread(() => _pdfView.Document = document);
 
                 // Get document metadata
                 var pageCount = (int)document.PageCount;
@@ -395,7 +393,7 @@ public class PdfViewiOS : IPdfView, IDisposable
                 if (!_documentLoaded)
                 {
                     _documentLoaded = true;
-                    System.Threading.Tasks.Task.Delay(100).ContinueWith(_ =>
+                    Task.Delay(100).ContinueWith(_ =>
                     {
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
@@ -435,7 +433,7 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
 
         // Force refresh the view
-        _pdfView.SetNeedsDisplay();
+        MainThread.BeginInvokeOnMainThread(() => _pdfView.SetNeedsDisplay());
     }
 
     private void OnPageChangedNotification(NSNotification notification)

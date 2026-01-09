@@ -294,7 +294,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
             {
                 FilePdfSource fileSource => _pdfView.FromFile(new Java.IO.File(fileSource.FilePath)),
                 UriPdfSource uriSource => _pdfView.FromUri(global::Android.Net.Uri.Parse(uriSource.Uri.ToString())),
-                StreamPdfSource streamSource => FromStream(streamSource.Stream),
+                StreamPdfSource streamSource => _pdfView.FromStream(streamSource.Stream),
                 BytesPdfSource bytesSource => _pdfView.FromBytes(bytesSource.Data),
                 AssetPdfSource assetSource => _pdfView.FromAsset(assetSource.AssetName),
                 _ => throw new NotSupportedException($"PDF source type {_source.GetType().Name} is not supported.")

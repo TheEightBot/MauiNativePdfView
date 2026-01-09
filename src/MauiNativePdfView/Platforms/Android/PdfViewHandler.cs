@@ -148,7 +148,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapSource(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && !ReferenceEquals(handler._pdfViewWrapper.Source, view.Source))
         {
             handler._pdfViewWrapper.Source = view.Source;
         }
@@ -156,7 +156,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapEnableZoom(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableZoom != view.EnableZoom)
         {
             handler._pdfViewWrapper.EnableZoom = view.EnableZoom;
         }
@@ -164,7 +164,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapEnableSwipe(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableSwipe != view.EnableSwipe)
         {
             handler._pdfViewWrapper.EnableSwipe = view.EnableSwipe;
         }
@@ -172,7 +172,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapEnableTapGestures(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableTapGestures != view.EnableTapGestures)
         {
             handler._pdfViewWrapper.EnableTapGestures = view.EnableTapGestures;
         }
@@ -180,7 +180,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapEnableLinkNavigation(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableLinkNavigation != view.EnableLinkNavigation)
         {
             handler._pdfViewWrapper.EnableLinkNavigation = view.EnableLinkNavigation;
         }
@@ -188,7 +188,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapZoom(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && Math.Abs(handler._pdfViewWrapper.Zoom - view.Zoom) > float.Epsilon)
         {
             handler._pdfViewWrapper.Zoom = view.Zoom;
         }
@@ -196,7 +196,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapMinZoom(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && Math.Abs(handler._pdfViewWrapper.MinZoom - view.MinZoom) > float.Epsilon)
         {
             handler._pdfViewWrapper.MinZoom = view.MinZoom;
         }
@@ -204,7 +204,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapMaxZoom(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && Math.Abs(handler._pdfViewWrapper.MaxZoom - view.MaxZoom) > float.Epsilon)
         {
             handler._pdfViewWrapper.MaxZoom = view.MaxZoom;
         }
@@ -212,7 +212,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapPageSpacing(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && Math.Abs(handler._pdfViewWrapper.PageSpacing - view.PageSpacing) > float.Epsilon)
         {
             handler._pdfViewWrapper.PageSpacing = view.PageSpacing;
         }
@@ -220,7 +220,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapFitPolicy(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.FitPolicy != view.FitPolicy)
         {
             handler._pdfViewWrapper.FitPolicy = view.FitPolicy;
         }
@@ -228,7 +228,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapDisplayMode(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.DisplayMode != view.DisplayMode)
         {
             handler._pdfViewWrapper.DisplayMode = view.DisplayMode;
         }
@@ -236,7 +236,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapScrollOrientation(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.ScrollOrientation != view.ScrollOrientation)
         {
             handler._pdfViewWrapper.ScrollOrientation = view.ScrollOrientation;
         }
@@ -244,7 +244,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapDefaultPage(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.DefaultPage != view.DefaultPage)
         {
             handler._pdfViewWrapper.DefaultPage = view.DefaultPage;
         }
@@ -252,7 +252,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapEnableAntialiasing(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableAntialiasing != view.EnableAntialiasing)
         {
             handler._pdfViewWrapper.EnableAntialiasing = view.EnableAntialiasing;
         }
@@ -260,7 +260,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapUseBestQuality(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.UseBestQuality != view.UseBestQuality)
         {
             handler._pdfViewWrapper.UseBestQuality = view.UseBestQuality;
         }
@@ -268,7 +268,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapBackgroundColor(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && !Equals(handler._pdfViewWrapper.BackgroundColor, view.BackgroundColor))
         {
             handler._pdfViewWrapper.BackgroundColor = view.BackgroundColor;
         }
@@ -276,7 +276,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
 
     private static void MapEnableAnnotationRendering(PdfViewHandler handler, PdfView view)
     {
-        if (handler._pdfViewWrapper != null)
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableAnnotationRendering != view.EnableAnnotationRendering)
         {
             handler._pdfViewWrapper.EnableAnnotationRendering = view.EnableAnnotationRendering;
         }
