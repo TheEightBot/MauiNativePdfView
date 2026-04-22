@@ -42,6 +42,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public PdfViewAndroid(Context context)
     {
         _pdfView = new PDFView(context, null);
+        _pdfView.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
     }
 
     /// <summary>
@@ -226,15 +227,14 @@ public class PdfViewAndroid : IPdfView, IDisposable
         set
         {
             _backgroundColor = value;
-            if (value != null)
-            {
-                var androidColor = global::Android.Graphics.Color.Argb(
+            var androidColor = value != null
+                ? global::Android.Graphics.Color.Argb(
                     (int)(value.Alpha * 255),
                     (int)(value.Red * 255),
                     (int)(value.Green * 255),
-                    (int)(value.Blue * 255));
-                _pdfView.SetBackgroundColor(androidColor);
-            }
+                    (int)(value.Blue * 255))
+                : global::Android.Graphics.Color.Transparent;
+            _pdfView.SetBackgroundColor(androidColor);
         }
     }
 
