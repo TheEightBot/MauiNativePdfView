@@ -29,7 +29,8 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
         [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
-        [nameof(PdfView.EnableAnnotationRendering)] = MapEnableAnnotationRendering
+        [nameof(PdfView.EnableAnnotationRendering)] = MapEnableAnnotationRendering,
+        [nameof(PdfView.PageAlignment)] = MapPageAlignment
     };
 
     public static CommandMapper<PdfView, PdfViewHandler> CommandMapper = new(ViewCommandMapper)
@@ -84,6 +85,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
             _pdfViewWrapper.EnableAntialiasing = VirtualView.EnableAntialiasing;
             _pdfViewWrapper.UseBestQuality = VirtualView.UseBestQuality;
             _pdfViewWrapper.BackgroundColor = VirtualView.BackgroundColor;
+            _pdfViewWrapper.PageAlignment = VirtualView.PageAlignment;
             // FitPolicy modifies DisplayMode internally, so it must be applied after DisplayMode.
             _pdfViewWrapper.FitPolicy = VirtualView.FitPolicy;
             // Source is applied last so LoadDocument() picks up all pre-configured properties.
@@ -277,6 +279,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableAnnotationRendering != view.EnableAnnotationRendering)
         {
             handler._pdfViewWrapper.EnableAnnotationRendering = view.EnableAnnotationRendering;
+        }
+    }
+
+    public static void MapPageAlignment(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.PageAlignment != view.PageAlignment)
+        {
+            handler._pdfViewWrapper.PageAlignment = view.PageAlignment;
         }
     }
 

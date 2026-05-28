@@ -169,6 +169,16 @@ public class PdfView : View
             true);
 
     /// <summary>
+    /// Bindable property for vertical page alignment when content is shorter than the viewport.
+    /// </summary>
+    public static readonly BindableProperty PageAlignmentProperty =
+        BindableProperty.Create(
+            nameof(PageAlignment),
+            typeof(PageAlignment),
+            typeof(PdfView),
+            PageAlignment.Default);
+
+    /// <summary>
     /// Gets or sets the PDF source to display.
     /// </summary>
     public PdfSource? Source
@@ -322,6 +332,20 @@ public class PdfView : View
     {
         get => (bool)GetValue(EnableAnnotationRenderingProperty);
         set => SetValue(EnableAnnotationRenderingProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets how the page is aligned vertically inside the viewport when the
+    /// rendered content is shorter than the view (e.g. a single short page, or a
+    /// landscape page in a portrait viewport with <see cref="FitPolicy.Width"/>).
+    /// Defaults to <see cref="PageAlignment.Default"/>, which preserves each platform's
+    /// native placement (vertically centered on both iOS and Android). Has no visible
+    /// effect once the content fills or exceeds the viewport.
+    /// </summary>
+    public PageAlignment PageAlignment
+    {
+        get => (PageAlignment)GetValue(PageAlignmentProperty);
+        set => SetValue(PageAlignmentProperty, value);
     }
 
     /// <summary>

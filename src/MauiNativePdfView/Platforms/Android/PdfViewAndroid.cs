@@ -34,6 +34,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private bool _useBestQuality = true;
     private Color? _backgroundColor;
     private bool _enableAnnotationRendering = true;
+    private PageAlignment _pageAlignment = PageAlignment.Default;
     private int _currentPage = 0;
     private int _pageCount = 0;
 
@@ -232,9 +233,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
                     (int)(value.Alpha * 255),
                     (int)(value.Red * 255),
                     (int)(value.Green * 255),
-                    (int)(value.Blue * 255))
                 : global::Android.Graphics.Color.Transparent;
-            _pdfView.SetBackgroundColor(androidColor);
+                _pdfView.SetBackgroundColor(androidColor);
+                _pdfView.Invalidate();
         }
     }
 
@@ -250,6 +251,77 @@ public class PdfViewAndroid : IPdfView, IDisposable
                     Reload();
             }
         }
+    }
+
+    public PageAlignment PageAlignment
+    {
+        get => _pageAlignment;
+        set
+        {
+            if (_pageAlignment == value)
+                return;
+
+            _pageAlignment = value;
+            if (_pageCount > 0)
+                ApplyPageAlignment();
+        }
+    }
+
+    /// <summary>
+    /// AhmerPdfium clamps the scroll offset to keep a short page centered, and MAUI
+    /// overrides any LayoutParameters change with its own Layout() call, so neither
+    /// MoveTo nor LayoutParameters.Height work as alignment hooks.
+    ///
+    /// Instead we use <see cref="global::Android.Views.View.TranslationY"/> — a pure
+    /// visual transform that shifts the entire native view (and its drawn page) up
+    /// by half the slack. The library still centers the page within its own viewport,
+    /// but the translated view places that centered page flush with the top of the
+    /// MAUI control's allocated area. The corresponding empty area moves below the
+    /// MAUI control's bounds, where the parent's background shows through.
+    /// </summary>
+    private void ApplyPageAlignment()
+    {
+        _pdfView.Post(ApplyPageAlignmentOnUiThread);
+    }
+
+    private void ApplyPageAlignmentOnUiThread()
+    {
+        if (_pageAlignment != PageAlignment.Top || _pageCount == 0)
+        {
+            if (_pdfView.TranslationY != 0f)
+                _pdfView.TranslationY = 0f;
+            return;
+        }
+
+        int pageIndex = _currentPage >= 0 && _currentPage < _pageCount ? _currentPage : 0;
+        var pageSize = _pdfView.GetPageSize(pageIndex);
+        if (pageSize == null || pageSize.Width <= 0 || pageSize.Height <= 0)
+            return;
+
+        int viewportWidth = _pdfView.Width;
+        int viewportHeight = _pdfView.Height;
+        if (viewportWidth <= 0 || viewportHeight <= 0)
+            return;
+
+        float scale = _fitPolicy switch
+        {
+            Abstractions.FitPolicy.Height => viewportHeight / pageSize.Height,
+            Abstractions.FitPolicy.Both => Math.Min(viewportWidth / pageSize.Width, viewportHeight / pageSize.Height),
+            _ => viewportWidth / pageSize.Width,
+        };
+        float renderedHeight = pageSize.Height * scale * _pdfView.Zoom;
+
+        if (renderedHeight <= 0 || renderedHeight >= viewportHeight)
+        {
+            if (_pdfView.TranslationY != 0f)
+                _pdfView.TranslationY = 0f;
+            return;
+        }
+
+        float slack = viewportHeight - renderedHeight;
+        float translateY = -slack / 2f;
+        if (Math.Abs(_pdfView.TranslationY - translateY) > 0.5f)
+            _pdfView.TranslationY = translateY;
     }
 
     public event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
@@ -365,6 +437,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private void OnDocumentLoaded(int pageCount)
     {
         _pageCount = pageCount;
+        ApplyPageAlignment();
         DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
     }
 
@@ -378,6 +451,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
             _pdfView.JumpTo(pageToRestore);
         }
 
+        ApplyPageAlignment();
         DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
     }
 
@@ -405,6 +479,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     private void OnRendered(int pageCount)
     {
+        // Re-apply once after the first render — the library may center the page
+        // again as part of its post-render layout pass.
+        ApplyPageAlignment();
         Rendered?.Invoke(this, new RenderedEventArgs(pageCount));
     }
 

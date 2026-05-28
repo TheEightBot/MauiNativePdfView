@@ -35,6 +35,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
         [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
         [nameof(PdfView.EnableAnnotationRendering)] = MapEnableAnnotationRendering,
+        [nameof(PdfView.PageAlignment)] = MapPageAlignment,
     };
 
     /// <summary>
@@ -92,6 +93,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         MapUseBestQuality(this, VirtualView);
         MapBackgroundColor(this, VirtualView);
         MapEnableAnnotationRendering(this, VirtualView);
+        MapPageAlignment(this, VirtualView);
         // Source is applied last so LoadDocument() picks up all pre-configured properties.
         MapSource(this, VirtualView);
     }
@@ -282,6 +284,14 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.EnableAnnotationRendering != view.EnableAnnotationRendering)
         {
             handler._pdfViewWrapper.EnableAnnotationRendering = view.EnableAnnotationRendering;
+        }
+    }
+
+    private static void MapPageAlignment(PdfViewHandler handler, PdfView view)
+    {
+        if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.PageAlignment != view.PageAlignment)
+        {
+            handler._pdfViewWrapper.PageAlignment = view.PageAlignment;
         }
     }
 

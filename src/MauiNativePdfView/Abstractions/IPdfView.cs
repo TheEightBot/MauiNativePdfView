@@ -98,6 +98,15 @@ public interface IPdfView
     bool EnableAnnotationRendering { get; set; }
 
     /// <summary>
+    /// Gets or sets how the page is aligned vertically inside the viewport when the
+    /// rendered content is shorter than the view. Defaults to <see cref="PageAlignment.Default"/>,
+    /// which preserves each platform's native placement (vertically centered on both
+    /// iOS and Android). Has no visible effect once the content fills or exceeds the
+    /// viewport (e.g. multi-page documents in continuous scroll).
+    /// </summary>
+    PageAlignment PageAlignment { get; set; }
+
+    /// <summary>
     /// Occurs when the document has finished loading.
     /// </summary>
     event EventHandler<DocumentLoadedEventArgs>? DocumentLoaded;
