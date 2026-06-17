@@ -4,9 +4,17 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:MauiPdfViewerSample"
+    FlyoutBehavior="Flyout"
     Title="MauiPdfViewerSample">
 
-    <!-- Make PdfTestPage the app's main ShellContent -->
+    <!-- Dedicated repro harness for layering / composition issues (e.g. issue #8).
+         Listed first so the app lands here on launch. -->
+    <ShellContent
+        Title="Repro Lab"
+        ContentTemplate="{DataTemplate local:LayoutReproPage}"
+        Route="LayoutReproPage" />
+
+    <!-- Main viewer -->
     <ShellContent
         Title="PDF Viewer"
         ContentTemplate="{DataTemplate local:PdfTestPage}"

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pdf="http://eightbot.com/maui/pdfview"
+             x:Class="MauiPdfViewerSample.LayoutReproPage"
+             Title="Repro Lab">
+
+    <!--
+      ░░ REPRO LAB ░░
+      A dedicated harness for reproducing and validating layering/composition
+      issues. Today it targets GitHub issue #8 (row-0 / overlapping content is
+      hidden unless BackgroundColor is set, plus scroll-time flicker), but it is
+      intended to grow: add a new repro scenario by extending the controls below.
+
+      How to use:
+        • Layout   – switch between "Overlay" (header shares the PdfView cell, the
+                     faithful #8 repro) and "Stacked" (header in a separate row, the
+                     control case that should always work).
+        • BG       – cycle the PdfView background: (unset) → Transparent → White.
+                     #8 says row-0 content vanishes when the background is unset.
+        • Header Z – bump the overlay header's ZIndex (the commenter's flicker
+                     workaround) to test scroll-time flicker.
+    -->
+
+    <Grid RowDefinitions="*,Auto" BackgroundColor="#0F172A">
+
+        <!-- ══════════════ REPRO REGION (the thing under test) ══════════════ -->
+        <Grid x:Name="ReproHost" Grid.Row="0" RowDefinitions="*">
+
+            <!-- PdfView fills the cell. Deliberately NO BackgroundColor set in XAML
+                 so the page opens in the exact failing state from issue #8. -->
+            <pdf:PdfView x:Name="PdfViewer"
+                         Grid.Row="0"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill"
+                         FitPolicy="Width"
+                         EnableSwipe="True"
+                         EnableZoom="True"
+                         EnableTapGestures="False"
+                         DocumentLoaded="OnDocumentLoaded"
+                         Error="OnError" />
+
+            <!-- "Row 0" content. In Overlay mode it shares the cell with the PdfView
+                 and should remain visible. InputTransparent so it never blocks PDF
+                 scroll/zoom gestures underneath it. -->
+            <Border x:Name="HeaderBand"
+                    Grid.Row="0"
+                    InputTransparent="True"
+                    VerticalOptions="Start"
+                    BackgroundColor="#CC1D4ED8"
+                    StrokeThickness="0"
+                    Padding="16,12">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="ROW 0 HEADER — must stay visible"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+                    <Label x:Name="HeaderSubLabel"
+                           Text="If you can't see this over the PDF, issue #8 is reproducing."
+                           TextColor="#DBEAFE"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- ══════════════ CONTROL PANEL ══════════════ -->
+        <VerticalStackLayout Grid.Row="1"
+                             Padding="12,10"
+                             Spacing="10"
+                             BackgroundColor="#111826">
+            <BoxView HeightRequest="1" Color="#1E293B" VerticalOptions="Start" />
+
+            <Label x:Name="StateLabel"
+                   Text=""
+                   TextColor="#94A3B8"
+                   FontSize="12" />
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Button Grid.Column="0"
+                        x:Name="LayoutButton"
+                        Text="Layout: Overlay"
+                        FontSize="13"
+                        Padding="8,10"
+                        TextColor="White"
+                        BackgroundColor="#1D2437"
+                        Clicked="OnToggleLayout" />
+                <Button Grid.Column="1"
+                        x:Name="BgButton"
+                        Text="BG: (unset)"
+                        FontSize="13"
+                        Padding="8,10"
+                        TextColor="White"
+                        BackgroundColor="#1D2437"
+                        Clicked="OnCycleBackground" />
+                <Button Grid.Column="2"
+                        x:Name="ZIndexButton"
+                        Text="Header Z: 0"
+                        FontSize="13"
+                        Padding="8,10"
+                        TextColor="White"
+                        BackgroundColor="#1D2437"
+                        Clicked="OnToggleZIndex" />
+            </Grid>
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>
