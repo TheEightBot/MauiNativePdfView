@@ -21,8 +21,12 @@ public class PdfViewiOS : IPdfView, IDisposable
     private bool _documentLoaded = false;
     private bool _enableAnnotationRendering = true;
     private bool _enableTapGestures = true;
+    private bool _enableZoom = true;
+    private float _minZoom = 1.0f;
+    private float _maxZoom = 3.0f;
     private FitPolicy _fitPolicy = FitPolicy.Width;
     private bool _needsFitReapply = false;
+    private bool _needsZoomConstraintsApply = false;
     private PageAlignment _pageAlignment = PageAlignment.Default;
     private Color? _backgroundColor;
 
@@ -42,6 +46,9 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             if (_needsFitReapply)
                 ApplyFitPolicy();
+
+            if (_needsZoomConstraintsApply)
+                ApplyZoomConstraints();
 
             ApplyPageAlignment();
         };
@@ -89,20 +96,14 @@ public class PdfViewiOS : IPdfView, IDisposable
 
     public bool EnableZoom
     {
-        get => _pdfView.MinScaleFactor < _pdfView.MaxScaleFactor;
+        get => _enableZoom;
         set
         {
-            if (value)
-            {
-                _pdfView.MinScaleFactor = MinZoom;
-                _pdfView.MaxScaleFactor = MaxZoom;
-            }
-            else
-            {
-                var currentScale = _pdfView.ScaleFactor;
-                _pdfView.MinScaleFactor = currentScale;
-                _pdfView.MaxScaleFactor = currentScale;
-            }
+            if (_enableZoom == value)
+                return;
+
+            _enableZoom = value;
+            ApplyZoomConstraints();
         }
     }
 
@@ -146,9 +147,31 @@ public class PdfViewiOS : IPdfView, IDisposable
         set => _pdfView.ScaleFactor = value;
     }
 
-    public float MinZoom { get; set; } = 1.0f;
+    public float MinZoom
+    {
+        get => _minZoom;
+        set
+        {
+            if (Math.Abs(_minZoom - value) <= float.Epsilon)
+                return;
 
-    public float MaxZoom { get; set; } = 3.0f;
+            _minZoom = value;
+            ApplyZoomConstraints();
+        }
+    }
+
+    public float MaxZoom
+    {
+        get => _maxZoom;
+        set
+        {
+            if (Math.Abs(_maxZoom - value) <= float.Epsilon)
+                return;
+
+            _maxZoom = value;
+            ApplyZoomConstraints();
+        }
+    }
 
     public int PageSpacing
     {
@@ -172,6 +195,9 @@ public class PdfViewiOS : IPdfView, IDisposable
 
     private void ApplyFitPolicy()
     {
+        // Zoom constraints must be re-applied after the fit scale is (re-)computed.
+        _needsZoomConstraintsApply = true;
+
         switch (_fitPolicy)
         {
             case FitPolicy.Width:
@@ -236,6 +262,46 @@ public class PdfViewiOS : IPdfView, IDisposable
         _pdfView.ScaleFactor = scale;
         return true;
     }
+
+    /// <summary>
+    /// Applies <see cref="MinZoom"/> and <see cref="MaxZoom"/> as absolute scale-factor bounds
+    /// on the native PDFView.  The values are treated as multipliers relative to the current
+    /// fit scale (i.e. the scale that was computed by the active <see cref="FitPolicy"/>), so
+    /// a <see cref="MinZoom"/> of <c>1.0</c> means "cannot zoom out below the fit scale", and
+    /// a <see cref="MaxZoom"/> of <c>3.0</c> means "can zoom in up to 3× the fit scale".
+    ///
+    /// The method defers via <see cref="_needsZoomConstraintsApply"/> when the document has
+    /// not yet been loaded or the native view has not yet been laid out with non-zero bounds
+    /// (so that <see cref="PdfKit.PdfView.ScaleFactor"/> reflects the final fit scale).
+    /// </summary>
+    private void ApplyZoomConstraints()
+    {
+        if (!_documentLoaded)
+            return;
+
+        var fitScale = (float)_pdfView.ScaleFactor;
+        if (fitScale <= 0 || _pdfView.Bounds.Width <= 0)
+        {
+            // Defer until the view has been laid out with a valid scale factor.
+            _needsZoomConstraintsApply = true;
+            return;
+        }
+
+        _needsZoomConstraintsApply = false;
+
+        if (!_enableZoom)
+        {
+            // Lock zoom completely at the current fit scale.
+            _pdfView.MinScaleFactor = fitScale;
+            _pdfView.MaxScaleFactor = fitScale;
+        }
+        else
+        {
+            _pdfView.MinScaleFactor = _minZoom * fitScale;
+            _pdfView.MaxScaleFactor = _maxZoom * fitScale;
+        }
+    }
+
 
     public Abstractions.PdfDisplayMode DisplayMode
     {
