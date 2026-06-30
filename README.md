@@ -10,7 +10,7 @@
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/EightBot.MauiNativePdfView/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/download)
 [![MAUI](https://img.shields.io/badge/MAUI-Latest-green.svg)](https://github.com/dotnet/maui)
 
 **Native PDF rendering** • **Zero web dependencies** • **Full feature parity**
@@ -83,7 +83,7 @@ Install-Package MauiNativePdfView
 
 ### Requirements
 
-- **.NET 9.0** or later
+- **.NET 10.0** or later
 - **iOS 12.2+** (PDFKit)
 - **Android 7.0+** (API 24+)
 
