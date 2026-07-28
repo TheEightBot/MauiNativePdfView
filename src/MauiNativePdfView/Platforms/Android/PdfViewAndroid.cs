@@ -42,6 +42,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public PdfViewAndroid(Context context)
     {
         _pdfView = new PDFView(context, null);
+        // AhmerPdfViewer's native default paints an opaque background, which hides anything
+        // sharing the PdfView's grid cell. Start transparent so an unset MAUI BackgroundColor
+        // composites the way callers expect.
+        _pdfView.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
     }
 
     /// <summary>
@@ -239,16 +243,17 @@ public class PdfViewAndroid : IPdfView, IDisposable
         set
         {
             _backgroundColor = value;
-            if (value != null)
-            {
-                var androidColor = global::Android.Graphics.Color.Argb(
+            // Always apply, including for null: guarding on non-null left a previously
+            // assigned colour in place, so clearing BackgroundColor had no effect.
+            var androidColor = value != null
+                ? global::Android.Graphics.Color.Argb(
                     (int)(value.Alpha * 255),
                     (int)(value.Red * 255),
                     (int)(value.Green * 255),
-                    (int)(value.Blue * 255));
-                _pdfView.SetBackgroundColor(androidColor);
-                _pdfView.Invalidate();
-            }
+                    (int)(value.Blue * 255))
+                : global::Android.Graphics.Color.Transparent;
+            _pdfView.SetBackgroundColor(androidColor);
+            _pdfView.Invalidate();
         }
     }
 
