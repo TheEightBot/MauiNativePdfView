@@ -38,7 +38,11 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             AutoScales = true,
             DisplayMode = PdfKit.PdfDisplayMode.SinglePageContinuous,
-            DisplayDirection = PdfDisplayDirection.Vertical
+            DisplayDirection = PdfDisplayDirection.Vertical,
+            // PdfKit paints an opaque grey backdrop by default, which hides anything sharing
+            // the PdfView's grid cell. Start transparent to match the Android control so an
+            // unset MAUI BackgroundColor composites identically on both platforms.
+            BackgroundColor = UIColor.Clear
         };
 
         // Re-apply deferred fit policy once the view has been laid out and has real bounds.
@@ -392,15 +396,16 @@ public class PdfViewiOS : IPdfView, IDisposable
         set
         {
             _backgroundColor = value;
-            if (value != null)
-            {
-                _pdfView.BackgroundColor = UIColor.FromRGBA(
+            // Always apply, including for null: guarding on non-null left a previously
+            // assigned colour in place, so clearing BackgroundColor had no effect.
+            _pdfView.BackgroundColor = value != null
+                ? UIColor.FromRGBA(
                     (float)value.Red,
                     (float)value.Green,
                     (float)value.Blue,
-                    (float)value.Alpha);
-                _pdfView.SetNeedsDisplay();
-            }
+                    (float)value.Alpha)
+                : UIColor.Clear;
+            _pdfView.SetNeedsDisplay();
         }
     }
 
