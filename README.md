@@ -10,7 +10,7 @@
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/EightBot.MauiNativePdfView/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/download)
 [![MAUI](https://img.shields.io/badge/MAUI-Latest-green.svg)](https://github.com/dotnet/maui)
 
 **Native PDF rendering** • **Zero web dependencies** • **Full feature parity**
@@ -83,9 +83,39 @@ Install-Package MauiNativePdfView
 
 ### Requirements
 
-- **.NET 9.0** or later
+- **.NET 10.0** or later
 - **iOS 12.2+** (PDFKit)
 - **Android 7.0+** (API 24+)
+
+> **Using .NET 9?** Version 2.0.0 targets .NET 10 only, because .NET 9 reached end of
+> support in May 2026. Stay on the [1.0.x line](https://www.nuget.org/packages/Eightbot.MauiNativePdfView/1.0.8)
+> until you can move up.
+
+## ⚠️ Migrating to 2.0
+
+Three behavioural changes. The first two only affect iOS.
+
+**1. `Zoom` is now a multiple of the fit scale on iOS.**
+It previously passed straight through to PDFKit's `ScaleFactor`, which is relative to the
+PDF's intrinsic size, while Android already treated it as a multiple of the fitted size.
+`Zoom="2.0"` therefore rendered at roughly 3× the fitted page on iOS but 2× on Android.
+Both platforms now mean "twice the fitted page". If you were passing absolute scale factors
+on iOS, divide by your fit scale.
+
+**2. An unset `BackgroundColor` is now transparent.**
+iOS previously showed PDFKit's opaque grey backdrop and Android its own opaque default,
+which hid anything sharing the viewer's grid cell. Both are now transparent by default.
+Set `BackgroundColor` explicitly if you want the old appearance.
+
+**3. .NET 9 is no longer supported.** See the note above.
+
+Two fixes worth knowing about, since code may have been working around them:
+
+- **`MinZoom`/`MaxZoom` now actually apply.** They never reached the native controls, so
+  zoom bounds were whatever each platform defaulted to. The `OnRendered` +
+  `MinScaleFactor` workaround circulated for iOS is no longer needed.
+- **`BackgroundColor` can now be cleared.** Assigning `null` previously left the last
+  colour in place.
 
 ## 🚀 Quick Start
 
