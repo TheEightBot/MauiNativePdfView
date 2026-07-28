@@ -225,7 +225,10 @@ public class PdfView : View
     }
 
     /// <summary>
-    /// Gets or sets the current zoom level (1.0 = 100%).
+    /// Gets or sets the current zoom level, as a multiple of the scale at which the document
+    /// fits the view under the active <see cref="FitPolicy"/>. <c>1.0</c> is the fitted
+    /// document and <c>2.0</c> is twice that size — it is not a percentage of the PDF's
+    /// intrinsic size. Values are clamped to <see cref="MinZoom"/>/<see cref="MaxZoom"/>.
     /// </summary>
     public float Zoom
     {
@@ -234,7 +237,8 @@ public class PdfView : View
     }
 
     /// <summary>
-    /// Gets or sets the minimum zoom level.
+    /// Gets or sets the minimum zoom level, as a multiple of the fit scale.
+    /// <c>1.0</c> prevents zooming out past the fitted document.
     /// </summary>
     public float MinZoom
     {
@@ -243,7 +247,8 @@ public class PdfView : View
     }
 
     /// <summary>
-    /// Gets or sets the maximum zoom level.
+    /// Gets or sets the maximum zoom level, as a multiple of the fit scale.
+    /// <c>3.0</c> allows zooming in to three times the fitted document.
     /// </summary>
     public float MaxZoom
     {

@@ -205,9 +205,9 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 | `EnableSwipe`               | `bool`                 | `true`                 | Enable swipe gestures          |
 | `EnableTapGestures`         | `bool`                 | `false`                | Enable tap interception        |
 | `EnableLinkNavigation`      | `bool`                 | `true`                 | Enable clickable links         |
-| `Zoom`                      | `float`                | `1.0f`                 | Current zoom level             |
-| `MinZoom`                   | `float`                | `1.0f`                 | Minimum zoom level             |
-| `MaxZoom`                   | `float`                | `3.0f`                 | Maximum zoom level             |
+| `Zoom`                      | `float`                | `1.0f`                 | Current zoom, × the fit scale  |
+| `MinZoom`                   | `float`                | `1.0f`                 | Minimum zoom, × the fit scale  |
+| `MaxZoom`                   | `float`                | `3.0f`                 | Maximum zoom, × the fit scale  |
 | `PageSpacing`               | `int`                  | `10`                   | Spacing between pages (pixels) |
 | `FitPolicy`                 | `FitPolicy`            | `Width`                | How pages fit on screen        |
 | `DisplayMode`               | `PdfDisplayMode`       | `SinglePageContinuous` | Page display mode              |
@@ -219,6 +219,14 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 | `EnableAnnotationRendering` | `bool`                 | `true`                 | Show PDF annotations           |
 | `CurrentPage`               | `int`                  | `0`                    | Current page (readonly)        |
 | `PageCount`                 | `int`                  | `0`                    | Total pages (readonly)         |
+
+#### A note on zoom values
+
+`Zoom`, `MinZoom`, and `MaxZoom` are **multiples of the fit scale** — the scale at which the
+document fits the view under the current `FitPolicy` — not percentages of the PDF's intrinsic
+size. So `1.0` is the fitted document, `2.0` is twice that size, and `MinZoom="1.0"` means
+"never zoom out past fitted". Because the values are relative, they stay meaningful when the
+view resizes or the device rotates.
 
 ### PdfSource Types
 

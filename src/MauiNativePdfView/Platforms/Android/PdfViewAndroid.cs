@@ -22,7 +22,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private bool _enableSwipe = true;
     private bool _enableLinkNavigation = true;
     private bool _enableTapGestures = true;
-    private float _zoom = 1.0f;
     private float _minZoom = 1.0f;
     private float _maxZoom = 3.0f;
     private int _pageSpacing = 10;
@@ -108,14 +107,16 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     public float Zoom
     {
-        get => _zoom;
+        // Read from the native control so the value reflects pinch gestures rather than
+        // just the last assignment.
+        get => _pdfView.Zoom;
         set
         {
-            if (_zoom != value)
-            {
-                _zoom = Math.Clamp(value, _minZoom, _maxZoom);
-                _pdfView.ZoomTo(_zoom);
-            }
+            var clamped = Math.Clamp(value, _minZoom, _maxZoom);
+            if (Math.Abs(_pdfView.Zoom - clamped) <= float.Epsilon)
+                return;
+
+            _pdfView.ZoomTo(clamped);
         }
     }
 

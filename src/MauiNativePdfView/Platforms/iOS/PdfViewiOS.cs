@@ -30,6 +30,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     private float _maxZoom = 3.0f;
     private nfloat _manualFitScale;
     private nfloat _appliedFitScale;
+    private float? _pendingZoom;
 
     public PdfViewiOS()
     {
@@ -146,10 +147,34 @@ public class PdfViewiOS : IPdfView, IDisposable
         set => _pdfView.EnableDataDetectors = value;
     }
 
+    /// <summary>
+    /// Zoom level expressed as a multiple of the fit scale, matching <see cref="MinZoom"/>/
+    /// <see cref="MaxZoom"/> and the Android control: <c>1.0</c> is the fitted document,
+    /// <c>2.0</c> is twice that. This is deliberately NOT PdfKit's absolute
+    /// <see cref="PdfKit.PdfView.ScaleFactor"/>, which is relative to the PDF's intrinsic size.
+    /// </summary>
     public float Zoom
     {
-        get => (float)_pdfView.ScaleFactor;
-        set => _pdfView.ScaleFactor = value;
+        get
+        {
+            var fitScale = GetFitScale();
+            return fitScale > 0
+                ? (float)(_pdfView.ScaleFactor / fitScale)
+                : _pendingZoom ?? 1.0f;
+        }
+
+        set
+        {
+            var fitScale = GetFitScale();
+            if (fitScale <= 0)
+            {
+                // Not laid out yet — applied once the fit scale becomes known.
+                _pendingZoom = value;
+                return;
+            }
+
+            _pdfView.ScaleFactor = Math.Clamp(value, _minZoom, _maxZoom) * fitScale;
+        }
     }
 
     public float MinZoom
@@ -206,6 +231,14 @@ public class PdfViewiOS : IPdfView, IDisposable
         // Locking zoom pins both bounds to the fitted scale.
         _pdfView.MinScaleFactor = _enableZoom ? fitScale * _minZoom : fitScale;
         _pdfView.MaxScaleFactor = _enableZoom ? fitScale * _maxZoom : fitScale;
+
+        // A Zoom set before layout couldn't be resolved against a fit scale at the time;
+        // now that one exists, honour it.
+        if (_pendingZoom is { } pendingZoom)
+        {
+            _pendingZoom = null;
+            _pdfView.ScaleFactor = Math.Clamp(pendingZoom, _minZoom, _maxZoom) * fitScale;
+        }
     }
 
     public int PageSpacing
