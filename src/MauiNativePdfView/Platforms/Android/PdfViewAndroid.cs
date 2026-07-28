@@ -122,13 +122,24 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public float MinZoom
     {
         get => _minZoom;
-        set => _minZoom = value;
+        set
+        {
+            _minZoom = value;
+            // Push to the native control, not just the backing field: the field alone only
+            // clamps the Zoom property, leaving pinch gestures bound by AhmerPdfViewer's
+            // own defaults.
+            _pdfView.MinZoom = value;
+        }
     }
 
     public float MaxZoom
     {
         get => _maxZoom;
-        set => _maxZoom = value;
+        set
+        {
+            _maxZoom = value;
+            _pdfView.MaxZoom = value;
+        }
     }
 
     public int PageSpacing
