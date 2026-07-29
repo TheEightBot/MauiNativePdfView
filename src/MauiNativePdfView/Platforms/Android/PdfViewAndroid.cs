@@ -22,7 +22,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private bool _enableSwipe = true;
     private bool _enableLinkNavigation = true;
     private bool _enableTapGestures = true;
-    private float _zoom = 1.0f;
     private float _minZoom = 1.0f;
     private float _maxZoom = 3.0f;
     private int _pageSpacing = 10;
@@ -43,6 +42,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public PdfViewAndroid(Context context)
     {
         _pdfView = new PDFView(context, null);
+        // AhmerPdfViewer's native default paints an opaque background, which hides anything
+        // sharing the PdfView's grid cell. Start transparent so an unset MAUI BackgroundColor
+        // composites the way callers expect.
+        _pdfView.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
     }
 
     /// <summary>
@@ -108,27 +111,40 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     public float Zoom
     {
-        get => _zoom;
+        // Read from the native control so the value reflects pinch gestures rather than
+        // just the last assignment.
+        get => _pdfView.Zoom;
         set
         {
-            if (_zoom != value)
-            {
-                _zoom = Math.Clamp(value, _minZoom, _maxZoom);
-                _pdfView.ZoomTo(_zoom);
-            }
+            var clamped = Math.Clamp(value, _minZoom, _maxZoom);
+            if (Math.Abs(_pdfView.Zoom - clamped) <= float.Epsilon)
+                return;
+
+            _pdfView.ZoomTo(clamped);
         }
     }
 
     public float MinZoom
     {
         get => _minZoom;
-        set => _minZoom = value;
+        set
+        {
+            _minZoom = value;
+            // Push to the native control, not just the backing field: the field alone only
+            // clamps the Zoom property, leaving pinch gestures bound by AhmerPdfViewer's
+            // own defaults.
+            _pdfView.MinZoom = value;
+        }
     }
 
     public float MaxZoom
     {
         get => _maxZoom;
-        set => _maxZoom = value;
+        set
+        {
+            _maxZoom = value;
+            _pdfView.MaxZoom = value;
+        }
     }
 
     public int PageSpacing
@@ -227,16 +243,17 @@ public class PdfViewAndroid : IPdfView, IDisposable
         set
         {
             _backgroundColor = value;
-            if (value != null)
-            {
-                var androidColor = global::Android.Graphics.Color.Argb(
+            // Always apply, including for null: guarding on non-null left a previously
+            // assigned colour in place, so clearing BackgroundColor had no effect.
+            var androidColor = value != null
+                ? global::Android.Graphics.Color.Argb(
                     (int)(value.Alpha * 255),
                     (int)(value.Red * 255),
                     (int)(value.Green * 255),
-                    (int)(value.Blue * 255));
-                _pdfView.SetBackgroundColor(androidColor);
-                _pdfView.Invalidate();
-            }
+                    (int)(value.Blue * 255))
+                : global::Android.Graphics.Color.Transparent;
+            _pdfView.SetBackgroundColor(androidColor);
+            _pdfView.Invalidate();
         }
     }
 

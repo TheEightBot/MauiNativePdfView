@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0-android</TargetFramework>
+        <TargetFramework>$(AndroidBindingTargetFramework)</TargetFramework>
         <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -10,7 +10,6 @@
         <IsTrimmable>true</IsTrimmable>
         <!-- Package Information -->
         <PackageId>eightbot.MauiNativePdfView.Android.Binding</PackageId>
-        <Version>1.0.0</Version>
         <Authors>MauiNativePdfView Contributors</Authors>
         <Company>MauiNativePdfView</Company>
         <Product>MauiNativePdfView Android Binding</Product>
@@ -32,6 +31,6 @@
     <ItemGroup>
         <!-- Kotlin standard library dependency -->
         <PackageReference Include="Xamarin.Kotlin.StdLib"
-                          Version="2.1.21" />
+                          Version="$(XamarinKotlinStdLibVersion)" />
     </ItemGroup>
 </Project>

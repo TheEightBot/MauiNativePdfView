@@ -12,8 +12,11 @@ permissions:
   discussions: write
 
 env:
-  DOTNET_VERSION: '9.0.x'
+  DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
+  # The .NET 10 iOS workload refuses to build against an older Xcode than it was
+  # built for, so pin it rather than inheriting whatever the runner defaults to.
+  XCODE_VERSION: '26.6'
 
 jobs:
   build-and-publish:
@@ -25,14 +28,29 @@ jobs:
       with:
         fetch-depth: 0
     
+    - name: Select Xcode
+      run: |
+        XCODE_APP="/Applications/Xcode_${{ env.XCODE_VERSION }}.app"
+        if [ ! -d "$XCODE_APP" ]; then
+          echo "Xcode ${{ env.XCODE_VERSION }} not found on this runner. Available:"
+          ls -d /Applications/Xcode*.app
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+        xcodebuild -version
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Install MAUI workloads
-      run: dotnet workload install maui
-    
+
+    - name: Install workloads
+      # Driven by the projects so the installed workloads track the target
+      # frameworks in Directory.Build.props instead of a hardcoded list.
+      run: |
+        dotnet workload restore src/MauiNativePdfView.Android.Binding/MauiNativePdfView.Android.Binding.csproj
+        dotnet workload restore src/MauiNativePdfView/MauiNativePdfView.csproj
+
     - name: Get version from tag
       id: get_version
       run: |
@@ -41,7 +59,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
         else
-          VERSION="1.0.0-dev.${{ github.run_number }}"
+          VERSION="2.0.0-dev.${{ github.run_number }}"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Building dev version: $VERSION"
         fi

@@ -10,7 +10,7 @@
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Eightbot.MauiNativePdfView.svg)](https://www.nuget.org/packages/EightBot.MauiNativePdfView/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/download)
 [![MAUI](https://img.shields.io/badge/MAUI-Latest-green.svg)](https://github.com/dotnet/maui)
 
 **Native PDF rendering** • **Zero web dependencies** • **Full feature parity**
@@ -83,9 +83,39 @@ Install-Package MauiNativePdfView
 
 ### Requirements
 
-- **.NET 9.0** or later
+- **.NET 10.0** or later
 - **iOS 12.2+** (PDFKit)
 - **Android 7.0+** (API 24+)
+
+> **Using .NET 9?** Version 2.0.0 targets .NET 10 only, because .NET 9 reached end of
+> support in May 2026. Stay on the [1.0.x line](https://www.nuget.org/packages/Eightbot.MauiNativePdfView/1.0.8)
+> until you can move up.
+
+## ⚠️ Migrating to 2.0
+
+Three behavioural changes. The first two only affect iOS.
+
+**1. `Zoom` is now a multiple of the fit scale on iOS.**
+It previously passed straight through to PDFKit's `ScaleFactor`, which is relative to the
+PDF's intrinsic size, while Android already treated it as a multiple of the fitted size.
+`Zoom="2.0"` therefore rendered at roughly 3× the fitted page on iOS but 2× on Android.
+Both platforms now mean "twice the fitted page". If you were passing absolute scale factors
+on iOS, divide by your fit scale.
+
+**2. An unset `BackgroundColor` is now transparent.**
+iOS previously showed PDFKit's opaque grey backdrop and Android its own opaque default,
+which hid anything sharing the viewer's grid cell. Both are now transparent by default.
+Set `BackgroundColor` explicitly if you want the old appearance.
+
+**3. .NET 9 is no longer supported.** See the note above.
+
+Two fixes worth knowing about, since code may have been working around them:
+
+- **`MinZoom`/`MaxZoom` now actually apply.** They never reached the native controls, so
+  zoom bounds were whatever each platform defaulted to. The `OnRendered` +
+  `MinScaleFactor` workaround circulated for iOS is no longer needed.
+- **`BackgroundColor` can now be cleared.** Assigning `null` previously left the last
+  colour in place.
 
 ## 🚀 Quick Start
 
@@ -205,9 +235,9 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 | `EnableSwipe`               | `bool`                 | `true`                 | Enable swipe gestures          |
 | `EnableTapGestures`         | `bool`                 | `false`                | Enable tap interception        |
 | `EnableLinkNavigation`      | `bool`                 | `true`                 | Enable clickable links         |
-| `Zoom`                      | `float`                | `1.0f`                 | Current zoom level             |
-| `MinZoom`                   | `float`                | `1.0f`                 | Minimum zoom level             |
-| `MaxZoom`                   | `float`                | `3.0f`                 | Maximum zoom level             |
+| `Zoom`                      | `float`                | `1.0f`                 | Current zoom, × the fit scale  |
+| `MinZoom`                   | `float`                | `1.0f`                 | Minimum zoom, × the fit scale  |
+| `MaxZoom`                   | `float`                | `3.0f`                 | Maximum zoom, × the fit scale  |
 | `PageSpacing`               | `int`                  | `10`                   | Spacing between pages (pixels) |
 | `FitPolicy`                 | `FitPolicy`            | `Width`                | How pages fit on screen        |
 | `DisplayMode`               | `PdfDisplayMode`       | `SinglePageContinuous` | Page display mode              |
@@ -219,6 +249,14 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 | `EnableAnnotationRendering` | `bool`                 | `true`                 | Show PDF annotations           |
 | `CurrentPage`               | `int`                  | `0`                    | Current page (readonly)        |
 | `PageCount`                 | `int`                  | `0`                    | Total pages (readonly)         |
+
+#### A note on zoom values
+
+`Zoom`, `MinZoom`, and `MaxZoom` are **multiples of the fit scale** — the scale at which the
+document fits the view under the current `FitPolicy` — not percentages of the PDF's intrinsic
+size. So `1.0` is the fitted document, `2.0` is twice that size, and `MinZoom="1.0"` means
+"never zoom out past fitted". Because the values are relative, they stay meaningful when the
+view resizes or the device rotates.
 
 ### PdfSource Types
 

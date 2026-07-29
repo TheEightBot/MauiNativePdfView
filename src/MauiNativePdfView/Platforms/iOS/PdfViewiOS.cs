@@ -25,6 +25,12 @@ public class PdfViewiOS : IPdfView, IDisposable
     private bool _needsFitReapply = false;
     private PageAlignment _pageAlignment = PageAlignment.Default;
     private Color? _backgroundColor;
+    private bool _enableZoom = true;
+    private float _minZoom = 1.0f;
+    private float _maxZoom = 3.0f;
+    private nfloat _manualFitScale;
+    private nfloat _appliedFitScale;
+    private float? _pendingZoom;
 
     public PdfViewiOS()
     {
@@ -32,7 +38,11 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             AutoScales = true,
             DisplayMode = PdfKit.PdfDisplayMode.SinglePageContinuous,
-            DisplayDirection = PdfDisplayDirection.Vertical
+            DisplayDirection = PdfDisplayDirection.Vertical,
+            // PdfKit paints an opaque grey backdrop by default, which hides anything sharing
+            // the PdfView's grid cell. Start transparent to match the Android control so an
+            // unset MAUI BackgroundColor composites identically on both platforms.
+            BackgroundColor = UIColor.Clear
         };
 
         // Re-apply deferred fit policy once the view has been laid out and has real bounds.
@@ -42,6 +52,13 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             if (_needsFitReapply)
                 ApplyFitPolicy();
+
+            // MinZoom/MaxZoom are multiples of the fit scale, and the fit scale moves
+            // whenever the view resizes (rotation, split view, first layout). Re-derive
+            // the native bounds whenever it does — this also covers the initial pass,
+            // where the fit scale isn't computable until the view has real bounds.
+            if (GetFitScale() != _appliedFitScale)
+                ApplyZoomConstraints();
 
             ApplyPageAlignment();
         };
@@ -89,20 +106,14 @@ public class PdfViewiOS : IPdfView, IDisposable
 
     public bool EnableZoom
     {
-        get => _pdfView.MinScaleFactor < _pdfView.MaxScaleFactor;
+        get => _enableZoom;
         set
         {
-            if (value)
-            {
-                _pdfView.MinScaleFactor = MinZoom;
-                _pdfView.MaxScaleFactor = MaxZoom;
-            }
-            else
-            {
-                var currentScale = _pdfView.ScaleFactor;
-                _pdfView.MinScaleFactor = currentScale;
-                _pdfView.MaxScaleFactor = currentScale;
-            }
+            if (_enableZoom == value)
+                return;
+
+            _enableZoom = value;
+            ApplyZoomConstraints();
         }
     }
 
@@ -140,15 +151,99 @@ public class PdfViewiOS : IPdfView, IDisposable
         set => _pdfView.EnableDataDetectors = value;
     }
 
+    /// <summary>
+    /// Zoom level expressed as a multiple of the fit scale, matching <see cref="MinZoom"/>/
+    /// <see cref="MaxZoom"/> and the Android control: <c>1.0</c> is the fitted document,
+    /// <c>2.0</c> is twice that. This is deliberately NOT PdfKit's absolute
+    /// <see cref="PdfKit.PdfView.ScaleFactor"/>, which is relative to the PDF's intrinsic size.
+    /// </summary>
     public float Zoom
     {
-        get => (float)_pdfView.ScaleFactor;
-        set => _pdfView.ScaleFactor = value;
+        get
+        {
+            var fitScale = GetFitScale();
+            return fitScale > 0
+                ? (float)(_pdfView.ScaleFactor / fitScale)
+                : _pendingZoom ?? 1.0f;
+        }
+
+        set
+        {
+            var fitScale = GetFitScale();
+            if (fitScale <= 0)
+            {
+                // Not laid out yet — applied once the fit scale becomes known.
+                _pendingZoom = value;
+                return;
+            }
+
+            _pdfView.ScaleFactor = Math.Clamp(value, _minZoom, _maxZoom) * fitScale;
+        }
     }
 
-    public float MinZoom { get; set; } = 1.0f;
+    public float MinZoom
+    {
+        get => _minZoom;
+        set
+        {
+            if (Math.Abs(_minZoom - value) <= float.Epsilon)
+                return;
 
-    public float MaxZoom { get; set; } = 3.0f;
+            _minZoom = value;
+            ApplyZoomConstraints();
+        }
+    }
+
+    public float MaxZoom
+    {
+        get => _maxZoom;
+        set
+        {
+            if (Math.Abs(_maxZoom - value) <= float.Epsilon)
+                return;
+
+            _maxZoom = value;
+            ApplyZoomConstraints();
+        }
+    }
+
+    /// <summary>
+    /// The scale at which the document currently "fits" the view under the active
+    /// <see cref="FitPolicy"/>. <see cref="MinZoom"/>/<see cref="MaxZoom"/> are multiples
+    /// of this value — <c>MinZoom = 1.0</c> means "cannot zoom out past the fitted view" —
+    /// which matches the semantics of the Android control. Returns 0 when the view has not
+    /// been laid out yet and the scale is not computable.
+    /// </summary>
+    private nfloat GetFitScale()
+        => _fitPolicy == FitPolicy.Width
+            ? _pdfView.ScaleFactorForSizeToFit // AutoScales owns the scale in this mode.
+            : _manualFitScale;                 // Computed by SetManualScale.
+
+    /// <summary>
+    /// Translates the relative <see cref="MinZoom"/>/<see cref="MaxZoom"/> multipliers into the
+    /// absolute scale factors PdfKit expects. Without this, PdfKit's own defaults apply and the
+    /// document can be pinched far below the fitted size regardless of what MinZoom is set to.
+    /// </summary>
+    private void ApplyZoomConstraints()
+    {
+        var fitScale = GetFitScale();
+        if (fitScale <= 0)
+            return; // Not laid out yet; retried from LayoutSubviewsAction.
+
+        _appliedFitScale = fitScale;
+
+        // Locking zoom pins both bounds to the fitted scale.
+        _pdfView.MinScaleFactor = _enableZoom ? fitScale * _minZoom : fitScale;
+        _pdfView.MaxScaleFactor = _enableZoom ? fitScale * _maxZoom : fitScale;
+
+        // A Zoom set before layout couldn't be resolved against a fit scale at the time;
+        // now that one exists, honour it.
+        if (_pendingZoom is { } pendingZoom)
+        {
+            _pendingZoom = null;
+            _pdfView.ScaleFactor = Math.Clamp(pendingZoom, _minZoom, _maxZoom) * fitScale;
+        }
+    }
 
     public int PageSpacing
     {
@@ -196,6 +291,9 @@ public class PdfViewiOS : IPdfView, IDisposable
                 _needsFitReapply = !SetManualScale(fitWidth: true, fitHeight: true);
                 break;
         }
+
+        // Zoom bounds are relative to the fit scale, which just changed.
+        ApplyZoomConstraints();
     }
 
     /// <summary>
@@ -233,6 +331,7 @@ public class PdfViewiOS : IPdfView, IDisposable
             scale = (nfloat)(viewBounds.Width / pageRect.Width);
         }
 
+        _manualFitScale = scale;
         _pdfView.ScaleFactor = scale;
         return true;
     }
@@ -297,15 +396,16 @@ public class PdfViewiOS : IPdfView, IDisposable
         set
         {
             _backgroundColor = value;
-            if (value != null)
-            {
-                _pdfView.BackgroundColor = UIColor.FromRGBA(
+            // Always apply, including for null: guarding on non-null left a previously
+            // assigned colour in place, so clearing BackgroundColor had no effect.
+            _pdfView.BackgroundColor = value != null
+                ? UIColor.FromRGBA(
                     (float)value.Red,
                     (float)value.Green,
                     (float)value.Blue,
-                    (float)value.Alpha);
-                _pdfView.SetNeedsDisplay();
-            }
+                    (float)value.Alpha)
+                : UIColor.Clear;
+            _pdfView.SetNeedsDisplay();
         }
     }
 
