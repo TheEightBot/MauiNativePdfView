@@ -41,6 +41,9 @@ public partial class PdfTestPage : ContentPage
     };
     private readonly string[] _displayModeNames = { "Cont. Scroll", "Single Page" };
 
+    private int _zoomIndex = 0;
+    private readonly float[] _zoomLevels = { 1.0f, 1.5f, 2.0f, 3.0f };
+
     private int _alignmentIndex = 0;
     private readonly PageAlignment[] _alignments =
     {
@@ -258,6 +261,17 @@ public partial class PdfTestPage : ContentPage
         PdfViewer.EnableAnnotationRendering = !PdfViewer.EnableAnnotationRendering;
         ToggleAnnotationsButton.Text = PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled";
         StatusLabel.Text = $"Annotations: {(PdfViewer.EnableAnnotationRendering ? "Enabled" : "Disabled")}";
+    }
+
+    // Regression cover for the Android crash where assigning Zoom at runtime left the
+    // native control holding scroll offsets from the previous zoom level: the next tap
+    // resolved an unopened page and took pdfium down with a SIGSEGV. Zoom, then tap.
+    private void OnToggleZoomClicked(object? sender, EventArgs e)
+    {
+        _zoomIndex = (_zoomIndex + 1) % _zoomLevels.Length;
+        PdfViewer.Zoom = _zoomLevels[_zoomIndex];
+        ToggleZoomButton.Text = $"{_zoomLevels[_zoomIndex]:0.0}x";
+        StatusLabel.Text = $"Zoom: {_zoomLevels[_zoomIndex]:0.0}x — now tap the page";
     }
 
     private void OnToggleTapGesturesClicked(object? sender, EventArgs e)
