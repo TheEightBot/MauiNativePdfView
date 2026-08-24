@@ -30,7 +30,8 @@ public class PdfViewiOS : IPdfView, IDisposable
     private float _maxZoom = 3.0f;
     private nfloat _manualFitScale;
     private nfloat _appliedFitScale;
-    private float? _pendingZoom;
+    private float _zoom = 1.0f;
+    private bool _zoomNeedsApply;
 
     public PdfViewiOS()
     {
@@ -45,6 +46,11 @@ public class PdfViewiOS : IPdfView, IDisposable
             BackgroundColor = UIColor.Clear
         };
 
+        // PdfKit re-fits the document during its own layout, which rewrites ScaleFactor and
+        // with it the relative zoom. Capture what is on screen before that happens so the
+        // post-layout hook below can put it back.
+        _pdfView.WillLayoutSubviewsAction = CaptureZoom;
+
         // Re-apply deferred fit policy once the view has been laid out and has real bounds.
         // Page alignment is re-applied every layout pass so it survives PdfKit's
         // internal re-centering when the document or scale changes.
@@ -58,7 +64,16 @@ public class PdfViewiOS : IPdfView, IDisposable
             // the native bounds whenever it does — this also covers the initial pass,
             // where the fit scale isn't computable until the view has real bounds.
             if (GetFitScale() != _appliedFitScale)
+            {
+                // That re-fit dropped the relative zoom back to 1. Restore the captured
+                // level so rotating doesn't silently zoom the user out — the Android control
+                // keeps its zoom across a size change, and this keeps the two matching.
+                _zoomNeedsApply = true;
                 ApplyZoomConstraints();
+            }
+
+            // Replays a level assigned before the view had bounds or a document to fit.
+            SyncZoom();
 
             ApplyPageAlignment();
         };
@@ -94,7 +109,9 @@ public class PdfViewiOS : IPdfView, IDisposable
                 return;
 
             _source = value;
-            LoadDocument();
+            // A different document starts fitted; only an internal reload keeps the level
+            // the user was at.
+            LoadDocument(preserveZoom: false);
         }
     }
 
@@ -159,26 +176,63 @@ public class PdfViewiOS : IPdfView, IDisposable
     /// </summary>
     public float Zoom
     {
-        get
-        {
-            var fitScale = GetFitScale();
-            return fitScale > 0
-                ? (float)(_pdfView.ScaleFactor / fitScale)
-                : _pendingZoom ?? 1.0f;
-        }
-
+        // While a level is waiting to be applied, ours is the truth: the control is still
+        // showing whatever it re-fitted itself to.
+        get => _zoomNeedsApply ? _zoom : ReadZoom();
         set
         {
-            var fitScale = GetFitScale();
-            if (fitScale <= 0)
-            {
-                // Not laid out yet — applied once the fit scale becomes known.
-                _pendingZoom = value;
-                return;
-            }
-
-            _pdfView.ScaleFactor = Math.Clamp(value, _minZoom, _maxZoom) * fitScale;
+            _zoom = Math.Clamp(value, _minZoom, _maxZoom);
+            _zoomNeedsApply = !TryApplyZoom(_zoom);
         }
+    }
+
+    // Divide by the fit scale ScaleFactor was last established against, not the live one:
+    // during a re-fit the two differ, and only the former pairs with the current ScaleFactor.
+    private float ReadZoom()
+        => _appliedFitScale > 0 ? (float)(_pdfView.ScaleFactor / _appliedFitScale) : _zoom;
+
+    /// <summary>
+    /// Folds the level the control is currently showing — a pinch included — back into
+    /// <see cref="_zoom"/>, so that whatever re-fits the control next can restore it.
+    /// </summary>
+    private void CaptureZoom()
+    {
+        if (_zoomNeedsApply || _appliedFitScale <= 0)
+            return;
+
+        _zoom = Math.Clamp(ReadZoom(), _minZoom, _maxZoom);
+    }
+
+    /// <summary>
+    /// Re-clamps the current level after MinZoom/MaxZoom moved, and re-applies it.
+    /// </summary>
+    private void ReclampZoom()
+    {
+        CaptureZoom();
+        Zoom = _zoom;
+    }
+
+    /// <summary>
+    /// Pushes <see cref="_zoom"/> back to the control once a fit scale exists to express it
+    /// against.
+    /// </summary>
+    private void SyncZoom()
+    {
+        if (_zoomNeedsApply && TryApplyZoom(_zoom))
+            _zoomNeedsApply = false;
+    }
+
+    /// <returns><c>false</c> when the view has no fit scale yet, so nothing can be applied.</returns>
+    private bool TryApplyZoom(float zoom)
+    {
+        var fitScale = GetFitScale();
+        if (fitScale <= 0)
+            return false;
+
+        // ScaleFactor is now expressed against this fit scale; keep the pair in step.
+        _appliedFitScale = fitScale;
+        _pdfView.ScaleFactor = zoom * fitScale;
+        return true;
     }
 
     public float MinZoom
@@ -191,6 +245,7 @@ public class PdfViewiOS : IPdfView, IDisposable
 
             _minZoom = value;
             ApplyZoomConstraints();
+            ReclampZoom();
         }
     }
 
@@ -204,6 +259,7 @@ public class PdfViewiOS : IPdfView, IDisposable
 
             _maxZoom = value;
             ApplyZoomConstraints();
+            ReclampZoom();
         }
     }
 
@@ -236,13 +292,9 @@ public class PdfViewiOS : IPdfView, IDisposable
         _pdfView.MinScaleFactor = _enableZoom ? fitScale * _minZoom : fitScale;
         _pdfView.MaxScaleFactor = _enableZoom ? fitScale * _maxZoom : fitScale;
 
-        // A Zoom set before layout couldn't be resolved against a fit scale at the time;
-        // now that one exists, honour it.
-        if (_pendingZoom is { } pendingZoom)
-        {
-            _pendingZoom = null;
-            _pdfView.ScaleFactor = Math.Clamp(pendingZoom, _minZoom, _maxZoom) * fitScale;
-        }
+        // A Zoom that couldn't be resolved against a fit scale earlier, or one a re-fit
+        // just discarded, is applied now that a scale exists.
+        SyncZoom();
     }
 
     public int PageSpacing
@@ -267,6 +319,11 @@ public class PdfViewiOS : IPdfView, IDisposable
 
     private void ApplyFitPolicy()
     {
+        // Fitting rewrites ScaleFactor, so bank the current level first; ApplyZoomConstraints
+        // at the end of this method puts it back.
+        CaptureZoom();
+        _zoomNeedsApply = true;
+
         switch (_fitPolicy)
         {
             case FitPolicy.Width:
@@ -544,8 +601,18 @@ public class PdfViewiOS : IPdfView, IDisposable
         LoadDocument();
     }
 
-    private void LoadDocument()
+    private void LoadDocument(bool preserveZoom = true)
     {
+        // Assigning a new Document makes PdfKit re-fit, which resets the zoom. Settle on the
+        // level to replay once the document is in and fitted — the Android control does the
+        // same across its reload.
+        if (preserveZoom)
+            CaptureZoom();
+        else
+            _zoom = Math.Clamp(1.0f, _minZoom, _maxZoom);
+
+        _zoomNeedsApply = true;
+
         if (_source == null)
         {
             _pdfView.Document = null;
@@ -818,6 +885,10 @@ public class PdfViewiOS : IPdfView, IDisposable
             _tapGestureRecognizer = null;
         }
 
+        // Drop the layout hooks before disposing: UIKit can still lay the view out during
+        // teardown, and they call back into this instance.
+        _pdfView.WillLayoutSubviewsAction = null;
+        _pdfView.LayoutSubviewsAction = null;
         _pdfView.WeakDelegate = null;
         _pdfView?.Dispose();
     }
@@ -829,10 +900,14 @@ public class PdfViewiOS : IPdfView, IDisposable
     /// </summary>
     private class NativePdfView : PdfKit.PdfView
     {
+        internal Action? WillLayoutSubviewsAction { get; set; }
+
         internal Action? LayoutSubviewsAction { get; set; }
 
         public override void LayoutSubviews()
         {
+            // Before base: PdfKit re-fits here, and the pre-fit scale is only readable now.
+            WillLayoutSubviewsAction?.Invoke();
             base.LayoutSubviews();
             LayoutSubviewsAction?.Invoke();
         }
