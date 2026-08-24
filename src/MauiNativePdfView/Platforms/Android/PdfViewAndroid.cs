@@ -36,6 +36,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private PageAlignment _pageAlignment = PageAlignment.Default;
     private int _currentPage = 0;
     private int _pageCount = 0;
+    private float _zoom = 1.0f;
+    private bool _zoomNeedsApply;
+    private readonly HashSet<int> _openedPages = new();
 
     private TapListener? _tapListener;
 
@@ -63,7 +66,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
             if (_source != value)
             {
                 _source = value;
-                LoadDocument();
+                // A different document starts fitted; only an internal reload keeps the
+                // level the user was at.
+                LoadDocument(preserveZoom: false);
             }
         }
     }
@@ -109,18 +114,148 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
+    /// <inheritdoc />
     public float Zoom
     {
-        // Read from the native control so the value reflects pinch gestures rather than
-        // just the last assignment.
-        get => _pdfView.Zoom;
+        // While a level is waiting to be applied, ours is the truth: the control is still
+        // showing whatever it reset itself to.
+        get => _zoomNeedsApply ? _zoom : ReadZoom();
         set
         {
-            var clamped = Math.Clamp(value, _minZoom, _maxZoom);
-            if (Math.Abs(_pdfView.Zoom - clamped) <= float.Epsilon)
-                return;
+            _zoom = Math.Clamp(value, _minZoom, _maxZoom);
+            _zoomNeedsApply = !TryApplyZoom(_zoom);
+        }
+    }
 
-            _pdfView.ZoomTo(clamped);
+    private float ReadZoom() => _pageCount > 0 ? _pdfView.Zoom : _zoom;
+
+    /// <summary>
+    /// Folds the level the control is currently showing — a pinch included — back into
+    /// <see cref="_zoom"/>, so that whatever resets the control next can restore it.
+    /// </summary>
+    private void CaptureZoom()
+    {
+        if (!_zoomNeedsApply && _pageCount > 0)
+            _zoom = Math.Clamp(_pdfView.Zoom, _minZoom, _maxZoom);
+    }
+
+    /// <summary>
+    /// Re-clamps the current level after MinZoom/MaxZoom moved, and re-applies it.
+    /// </summary>
+    private void ReclampZoom()
+    {
+        CaptureZoom();
+        Zoom = _zoom;
+    }
+
+    /// <summary>
+    /// Pushes <see cref="_zoom"/> back to the control once it can accept one. Posted so it
+    /// runs after the layout pass that follows a load.
+    /// </summary>
+    private void SyncZoom()
+    {
+        if (!_zoomNeedsApply)
+            return;
+
+        _pdfView.Post(() =>
+        {
+            if (_zoomNeedsApply && TryApplyZoom(_zoom))
+                _zoomNeedsApply = false;
+        });
+    }
+
+    /// <summary>
+    /// Applies a zoom level the way AhmerPdfViewer applies its own.
+    ///
+    /// PDFView.ZoomTo() is a bare field assignment: it neither re-clamps the scroll offsets
+    /// nor re-renders, so the control keeps offsets that describe the *previous* zoom level.
+    /// The next tap runs the library's link hit-test, which maps the touch through the new
+    /// zoom and the stale offset, resolves a page the renderer never opened, and hands
+    /// PdfiumCore a page index missing from its cache. PdfiumCore substitutes -1 for the
+    /// missing native page pointer and passes it to pdfium unguarded, which dereferences it
+    /// and takes the process down with SIGSEGV at 0xffffffff.
+    ///
+    /// ZoomCenteredTo() recomputes and clamps the offsets around a pivot (via MoveTo), and
+    /// LoadPages() re-renders the visible parts at the new scale. That pair is exactly what
+    /// ZoomWithAnimation drives on each animation frame and at its end, which is why
+    /// animating the zoom sidesteps the crash.
+    /// </summary>
+    /// <returns><c>false</c> when the control is not ready to zoom yet.</returns>
+    private bool TryApplyZoom(float zoom)
+    {
+        // MoveTo() no-ops without a loaded document, and the pivot needs real bounds.
+        // Either way the offsets would stay stale, which is the state we're avoiding.
+        if (_pageCount == 0 || _pdfView.Width <= 0 || _pdfView.Height <= 0)
+            return false;
+
+        if (Math.Abs(_pdfView.Zoom - zoom) > float.Epsilon)
+        {
+            _pdfView.ZoomCenteredTo(zoom, new global::Android.Graphics.PointF(_pdfView.Width / 2f, _pdfView.Height / 2f));
+            _pdfView.LoadPages();
+            // Re-settles the page under a snapping display mode, as the animated path does.
+            _pdfView.PerformPageSnap();
+            // The viewport now covers a different set of pages.
+            EnsureVisiblePagesOpen();
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Opens every page a touch inside the current viewport could resolve to.
+    ///
+    /// AhmerPdfium opens pages lazily, on its background rendering thread — but the tap
+    /// hit-test runs synchronously on the UI thread. DragPinchManager.checkLinkTapped
+    /// resolves the page under the touch and asks PdfiumCore for that page's links, and
+    /// PdfiumCore.pagePtr() answers -1 for any page missing from its cache, then hands that
+    /// -1 to pdfium as an FPDF_PAGE with no guard. pdfium dereferences it and the process
+    /// dies with SIGSEGV. Tapping a page the renderer has not reached yet — after a fling,
+    /// or a zoom that brought new pages into view — is enough to hit it.
+    ///
+    /// Opening those pages up front means the pointer is always real by the time a tap can
+    /// reach them. PdfFile.OpenPage records what it has opened and no-ops on repeat, so this
+    /// costs one native page open per page actually visited.
+    /// </summary>
+    private void EnsureVisiblePagesOpen()
+    {
+        var pdfFile = _pdfView.PdfFile;
+        if (pdfFile == null)
+            return;
+
+        int pageCount = pdfFile.PagesCount;
+        if (pageCount <= 0)
+            return;
+
+        float zoom = _pdfView.Zoom;
+        bool vertical = _pdfView.SwipeVertical;
+        float viewportStart = vertical ? -_pdfView.CurrentYOffset : -_pdfView.CurrentXOffset;
+        float viewportEnd = viewportStart + (vertical ? _pdfView.Height : _pdfView.Width);
+
+        // One page of slack either side: a page can scroll into view before the current page
+        // changes and brings us back here.
+        int first = Math.Max(pdfFile.GetPageAtOffset(viewportStart, zoom) - 1, 0);
+        int last = Math.Min(pdfFile.GetPageAtOffset(viewportEnd, zoom) + 1, pageCount - 1);
+
+        for (int page = first; page <= last; page++)
+        {
+            // PdfFile.OpenPage takes the same lock PdfiumCore holds for the whole of a native
+            // page render, and it takes it even when the page is already open. Remembering
+            // what we've asked for keeps this off that lock once a page has been covered —
+            // which matters because this runs on the UI thread while a fling is in flight.
+            if (!_openedPages.Add(page))
+                continue;
+
+            try
+            {
+                pdfFile.OpenPage(page);
+            }
+            catch (Exception ex)
+            {
+                // A page that will not open cannot be rendered either — leave it to the
+                // library's own error path to report rather than failing the whole sweep.
+                // It stays in the set: the library also records the failure and won't retry.
+                System.Diagnostics.Debug.WriteLine($"MauiNativePdfView: could not open page {page}: {ex.Message}");
+            }
         }
     }
 
@@ -134,6 +269,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
             // clamps the Zoom property, leaving pinch gestures bound by AhmerPdfViewer's
             // own defaults.
             _pdfView.MinZoom = value;
+            ReclampZoom();
         }
     }
 
@@ -144,6 +280,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
         {
             _maxZoom = value;
             _pdfView.MaxZoom = value;
+            ReclampZoom();
         }
     }
 
@@ -370,13 +507,26 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     #endregion
 
-    private void LoadDocument()
+    private void LoadDocument(bool preserveZoom = true)
     {
         if (_source == null)
             return;
 
         // Store current page to restore after reload
         int pageToRestore = _currentPage;
+
+        // PDFView.recycle() runs as part of Load() and resets the native zoom to 1, so
+        // settle on the level to replay afterwards — the same treatment the current page
+        // gets — and mark it unapplied.
+        if (preserveZoom)
+            CaptureZoom();
+        else
+            _zoom = Math.Clamp(1.0f, _minZoom, _maxZoom);
+
+        _zoomNeedsApply = true;
+
+        // The PdfFile behind these — and so every native page it had open — is replaced.
+        _openedPages.Clear();
 
         try
         {
@@ -455,6 +605,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private void OnDocumentLoaded(int pageCount)
     {
         _pageCount = pageCount;
+        // Before ApplyPageAlignment: the alignment maths reads the native zoom.
+        SyncZoom();
+        EnsureVisiblePagesOpen();
         ApplyPageAlignment();
         DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
     }
@@ -469,6 +622,8 @@ public class PdfViewAndroid : IPdfView, IDisposable
             _pdfView.JumpTo(pageToRestore);
         }
 
+        SyncZoom();
+        EnsureVisiblePagesOpen();
         ApplyPageAlignment();
         DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
     }
@@ -477,6 +632,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     {
         _currentPage = pageIndex;
         _pageCount = pageCount;
+        EnsureVisiblePagesOpen();
         PageChanged?.Invoke(this, new PageChangedEventArgs(pageIndex, pageCount));
     }
 
@@ -498,7 +654,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private void OnRendered(int pageCount)
     {
         // Re-apply once after the first render — the library may center the page
-        // again as part of its post-render layout pass.
+        // again as part of its post-render layout pass, and a Zoom set before the view
+        // had bounds only becomes applicable once something has actually been drawn.
+        SyncZoom();
+        EnsureVisiblePagesOpen();
         ApplyPageAlignment();
         Rendered?.Invoke(this, new RenderedEventArgs(pageCount));
     }
