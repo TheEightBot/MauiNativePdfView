@@ -200,9 +200,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
         if (Math.Abs(_pdfView.Zoom - zoom) > float.Epsilon)
         {
             _pdfView.ZoomCenteredTo(zoom, new global::Android.Graphics.PointF(_pdfView.Width / 2f, _pdfView.Height / 2f));
-            // The redraw below reaches ReportZoomIfChanged. Baseline it here so the level we
-            // just asked for is not republished back at the caller as if the user had done it.
-            _lastReportedZoom = zoom;
             _pdfView.LoadPages();
             // Re-settles the page under a snapping display mode, as the animated path does.
             _pdfView.PerformPageSnap();

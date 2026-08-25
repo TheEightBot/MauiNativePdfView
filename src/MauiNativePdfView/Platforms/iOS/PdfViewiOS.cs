@@ -248,9 +248,6 @@ public class PdfViewiOS : IPdfView, IDisposable
         // ScaleFactor is now expressed against this fit scale; keep the pair in step.
         _appliedFitScale = fitScale;
         _pdfView.ScaleFactor = zoom * fitScale;
-        // Assigning ScaleFactor posts ScaleChanged. Baseline it here so the level we just
-        // asked for is not then republished back at the caller as if the user had done it.
-        _lastReportedZoom = zoom;
         return true;
     }
 

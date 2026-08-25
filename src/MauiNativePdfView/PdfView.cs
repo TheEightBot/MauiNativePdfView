@@ -66,7 +66,8 @@ public class PdfView : View
             nameof(Zoom),
             typeof(float),
             typeof(PdfView),
-            1.0f);
+            1.0f,
+            propertyChanged: OnZoomPropertyChanged);
 
     /// <summary>
     /// Bindable property for minimum zoom level.
@@ -458,10 +459,20 @@ public class PdfView : View
     internal void RaiseZoomChanged(ZoomChangedEventArgs args)
     {
         // Writing the bindable property is the whole point: it is what a TwoWay binding
-        // observes. The handler's MapZoom compares against the native control before pushing
-        // anything back, so setting the level we were just told about stops here.
+        // observes, and its property-changed callback is what raises ZoomChanged. Routing
+        // the event through the property rather than raising it here is what makes a level
+        // the caller assigned and a level the user pinched report identically. The handler's
+        // MapZoom compares against the native control before pushing anything back, so
+        // setting the level we were just told about stops here.
         Zoom = args.Zoom;
-        ZoomChanged?.Invoke(this, args);
+    }
+
+    private static void OnZoomPropertyChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is PdfView view)
+        {
+            view.ZoomChanged?.Invoke(view, new ZoomChangedEventArgs((float)newValue));
+        }
     }
 
     internal void RaiseAnnotationTapped(AnnotationTappedEventArgs args)
