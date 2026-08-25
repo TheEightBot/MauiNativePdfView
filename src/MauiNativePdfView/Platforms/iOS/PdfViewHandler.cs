@@ -59,6 +59,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         _pdfViewWrapper.LinkTapped += OnLinkTapped;
         _pdfViewWrapper.Tapped += OnTapped;
         _pdfViewWrapper.Rendered += OnRendered;
+        _pdfViewWrapper.ZoomChanged += OnZoomChanged;
         _pdfViewWrapper.AnnotationTapped += OnAnnotationTapped;
 
         return _pdfViewWrapper.NativeView;
@@ -103,6 +104,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
             _pdfViewWrapper.LinkTapped -= OnLinkTapped;
             _pdfViewWrapper.Tapped -= OnTapped;
             _pdfViewWrapper.Rendered -= OnRendered;
+            _pdfViewWrapper.ZoomChanged -= OnZoomChanged;
             _pdfViewWrapper.AnnotationTapped -= OnAnnotationTapped;
             _pdfViewWrapper.Dispose();
             _pdfViewWrapper = null;
@@ -139,6 +141,11 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
     private void OnRendered(object? sender, RenderedEventArgs e)
     {
         VirtualView?.RaiseRendered(e);
+    }
+
+    private void OnZoomChanged(object? sender, ZoomChangedEventArgs e)
+    {
+        VirtualView?.RaiseZoomChanged(e);
     }
 
     private void OnAnnotationTapped(object? sender, AnnotationTappedEventArgs e)

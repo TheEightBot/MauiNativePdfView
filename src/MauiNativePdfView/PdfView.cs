@@ -394,6 +394,13 @@ public class PdfView : View
     public event EventHandler<RenderedEventArgs>? Rendered;
 
     /// <summary>
+    /// Occurs when the zoom level being shown changes, including changes the user drives
+    /// with a pinch or a double-tap. <see cref="Zoom"/> already holds the new level when
+    /// this is raised, so a <c>TwoWay</c> binding on <see cref="Zoom"/> has already updated.
+    /// </summary>
+    public event EventHandler<ZoomChangedEventArgs>? ZoomChanged;
+
+    /// <summary>
     /// Occurs when an annotation is tapped in the PDF.
     /// Platform availability: iOS only. Android does not support annotation tap detection with the current library.
     /// </summary>
@@ -446,6 +453,15 @@ public class PdfView : View
     internal void RaiseRendered(RenderedEventArgs args)
     {
         Rendered?.Invoke(this, args);
+    }
+
+    internal void RaiseZoomChanged(ZoomChangedEventArgs args)
+    {
+        // Writing the bindable property is the whole point: it is what a TwoWay binding
+        // observes. The handler's MapZoom compares against the native control before pushing
+        // anything back, so setting the level we were just told about stops here.
+        Zoom = args.Zoom;
+        ZoomChanged?.Invoke(this, args);
     }
 
     internal void RaiseAnnotationTapped(AnnotationTappedEventArgs args)

@@ -32,6 +32,14 @@ public class PdfViewiOS : IPdfView, IDisposable
     private nfloat _appliedFitScale;
     private float _zoom = 1.0f;
     private bool _zoomNeedsApply;
+    private NSObject? _scaleChangedObserver;
+    private float _lastReportedZoom = 1.0f;
+
+    /// <summary>
+    /// Smallest zoom movement worth publishing. A pinch posts a scale change per frame, and
+    /// without a floor the last few bits of float noise would republish on every one of them.
+    /// </summary>
+    private const float ZoomReportThreshold = 0.001f;
 
     public PdfViewiOS()
     {
@@ -86,6 +94,14 @@ public class PdfViewiOS : IPdfView, IDisposable
 
         // Subscribe to annotation hit notifications
         _annotationHitObserver = PdfKit.PdfView.Notifications.ObserveAnnotationHit(OnAnnotationHit);
+
+        // PdfKit posts this whenever ScaleFactor moves, which is the only signal that a
+        // pinch or double-tap happened — its delegate has no scale callback. Scoped to this
+        // view so a second PdfView on screen does not report through us.
+        _scaleChangedObserver = NSNotificationCenter.DefaultCenter.AddObserver(
+            PdfKit.PdfView.ScaleChangedNotification,
+            _ => ReportZoomIfChanged(),
+            _pdfView);
 
         // Set delegate to intercept link clicks
         _pdfView.WeakDelegate = new PdfViewDelegateImpl(this);
@@ -232,6 +248,9 @@ public class PdfViewiOS : IPdfView, IDisposable
         // ScaleFactor is now expressed against this fit scale; keep the pair in step.
         _appliedFitScale = fitScale;
         _pdfView.ScaleFactor = zoom * fitScale;
+        // Assigning ScaleFactor posts ScaleChanged. Baseline it here so the level we just
+        // asked for is not then republished back at the caller as if the user had done it.
+        _lastReportedZoom = zoom;
         return true;
     }
 
@@ -579,6 +598,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
     public event EventHandler<PdfTappedEventArgs>? Tapped;
     public event EventHandler<RenderedEventArgs>? Rendered;
+    public event EventHandler<ZoomChangedEventArgs>? ZoomChanged;
     public event EventHandler<AnnotationTappedEventArgs>? AnnotationTapped;
 
     public void GoToPage(int pageIndex)
@@ -772,6 +792,32 @@ public class PdfViewiOS : IPdfView, IDisposable
         MainThread.BeginInvokeOnMainThread(() => _pdfView.SetNeedsDisplay());
     }
 
+    /// <summary>
+    /// Publishes the level the control is actually showing, so a caller bound to Zoom sees
+    /// a pinch or double-tap.
+    ///
+    /// PdfKit posts ScaleChanged for its own re-fits too — assigning a document, a layout
+    /// pass, a rotation — and during those the fit scale ScaleFactor is expressed against is
+    /// mid-flight, so the ratio would be nonsense. <see cref="_zoomNeedsApply"/> is set
+    /// across exactly those windows, which is what makes it the right guard here.
+    /// </summary>
+    private void ReportZoomIfChanged()
+    {
+        if (_disposed || _zoomNeedsApply || _appliedFitScale <= 0)
+            return;
+
+        var zoom = Math.Clamp(ReadZoom(), _minZoom, _maxZoom);
+
+        // Float noise from the ScaleFactor/fit-scale division would otherwise republish on
+        // every frame of a pinch without the value meaningfully moving.
+        if (Math.Abs(zoom - _lastReportedZoom) < ZoomReportThreshold)
+            return;
+
+        _lastReportedZoom = zoom;
+        _zoom = zoom;
+        ZoomChanged?.Invoke(this, new ZoomChangedEventArgs(zoom));
+    }
+
     private void OnPageChangedNotification(NSNotification notification)
     {
         if (_pdfView.Document != null && _pdfView.CurrentPage != null)
@@ -876,6 +922,13 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             _annotationHitObserver?.Dispose();
             _annotationHitObserver = null;
+        }
+
+        if (_scaleChangedObserver != null)
+        {
+            NSNotificationCenter.DefaultCenter.RemoveObserver(_scaleChangedObserver);
+            _scaleChangedObserver?.Dispose();
+            _scaleChangedObserver = null;
         }
 
         if (_tapGestureRecognizer != null)

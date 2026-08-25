@@ -68,6 +68,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         _pdfViewWrapper.LinkTapped += OnLinkTapped;
         _pdfViewWrapper.Tapped += OnTapped;
         _pdfViewWrapper.Rendered += OnRendered;
+        _pdfViewWrapper.ZoomChanged += OnZoomChanged;
 
         return _pdfViewWrapper.NativeView;
     }
@@ -108,6 +109,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
             _pdfViewWrapper.LinkTapped -= OnLinkTapped;
             _pdfViewWrapper.Tapped -= OnTapped;
             _pdfViewWrapper.Rendered -= OnRendered;
+            _pdfViewWrapper.ZoomChanged -= OnZoomChanged;
             _pdfViewWrapper.Dispose();
             _pdfViewWrapper = null;
         }
@@ -145,6 +147,11 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
     private void OnRendered(object? sender, RenderedEventArgs e)
     {
         VirtualView?.RaiseRendered(e);
+    }
+
+    private void OnZoomChanged(object? sender, ZoomChangedEventArgs e)
+    {
+        VirtualView?.RaiseZoomChanged(e);
     }
 
     #endregion
