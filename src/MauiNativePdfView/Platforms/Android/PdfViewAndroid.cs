@@ -36,6 +36,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private PageAlignment _pageAlignment = PageAlignment.Default;
     private int _currentPage = 0;
     private int _pageCount = 0;
+    private bool _disposed;
     private float _zoom = 1.0f;
     private bool _zoomNeedsApply;
     private readonly HashSet<int> _openedPages = new();
@@ -159,7 +160,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
         _pdfView.Post(() =>
         {
-            if (_zoomNeedsApply && TryApplyZoom(_zoom))
+            if (!_disposed && _zoomNeedsApply && TryApplyZoom(_zoom))
                 _zoomNeedsApply = false;
         });
     }
@@ -218,6 +219,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
     /// </summary>
     private void EnsureVisiblePagesOpen()
     {
+        if (_disposed)
+            return;
+
         var pdfFile = _pdfView.PdfFile;
         if (pdfFile == null)
             return;
@@ -436,11 +440,17 @@ public class PdfViewAndroid : IPdfView, IDisposable
     /// </summary>
     private void ApplyPageAlignment()
     {
+        if (_disposed)
+            return;
+
         _pdfView.Post(ApplyPageAlignmentOnUiThread);
     }
 
     private void ApplyPageAlignmentOnUiThread()
     {
+        if (_disposed)
+            return;
+
         if (_pageAlignment != PageAlignment.Top || _pageCount == 0)
         {
             if (_pdfView.TranslationY != 0f)
@@ -811,6 +821,14 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        // Set before the peer goes away: work already queued on the view's message loop,
+        // and library callbacks still in flight, run after this and would otherwise touch
+        // a disposed Java object and throw on the UI thread.
+        _disposed = true;
+
         if (_tapListener != null)
         {
             _tapListener.Dispose();
