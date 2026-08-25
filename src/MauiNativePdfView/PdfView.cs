@@ -354,14 +354,53 @@ public class PdfView : View
     }
 
     /// <summary>
-    /// Gets the current page number (0-based).
+    /// Bindable property for the current page. Two-way by default: assigning it navigates,
+    /// and it is updated as the visible page changes.
     /// </summary>
-    public int CurrentPage { get; internal set; }
+    public static readonly BindableProperty CurrentPageProperty =
+        BindableProperty.Create(
+            nameof(CurrentPage),
+            typeof(int),
+            typeof(PdfView),
+            0,
+            defaultBindingMode: BindingMode.TwoWay);
+
+    private static readonly BindablePropertyKey PageCountPropertyKey =
+        BindableProperty.CreateReadOnly(
+            nameof(PageCount),
+            typeof(int),
+            typeof(PdfView),
+            0);
+
+    /// <summary>
+    /// Bindable property for the page count. Read-only: it describes the loaded document,
+    /// so bind it as a source (<c>Mode=OneWayToSource</c>) rather than as a target.
+    /// </summary>
+    public static readonly BindableProperty PageCountProperty = PageCountPropertyKey.BindableProperty;
+
+    /// <summary>
+    /// Gets or sets the current page number (0-based).
+    ///
+    /// Assigning it navigates, exactly as <see cref="GoToPage"/> does; a page assigned
+    /// before the document has loaded is honoured once it does, rather than dropped. The
+    /// property is updated whenever the visible page changes — by swipe, by fling, or by a
+    /// <see cref="GoToPage"/> call — so a <c>TwoWay</c> binding tracks the document both ways.
+    /// Out-of-range values are ignored.
+    /// </summary>
+    public int CurrentPage
+    {
+        get => (int)GetValue(CurrentPageProperty);
+        set => SetValue(CurrentPageProperty, value);
+    }
 
     /// <summary>
     /// Gets the total number of pages in the document.
     /// </summary>
-    public int PageCount { get; internal set; }
+    public int PageCount
+    {
+        get => (int)GetValue(PageCountProperty);
+        private set => SetValue(PageCountPropertyKey, value);
+    }
 
     /// <summary>
     /// Occurs when the document has finished loading.

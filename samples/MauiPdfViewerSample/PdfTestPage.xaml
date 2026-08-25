@@ -70,8 +70,13 @@
         <Grid RowDefinitions="*,Auto">
 
             <!-- PDF viewer fills all available height -->
+            <!-- CurrentPage binds two-way: the page indicator below follows the document,
+                 and assigning BoundPage from code-behind navigates. PageCount is read-only,
+                 so it is bound as a source. -->
             <pdf:PdfView x:Name="PdfViewer"
                          Grid.Row="0"
+                         CurrentPage="{Binding BoundPage}"
+                         PageCount="{Binding BoundPageCount, Mode=OneWayToSource}"
                          HorizontalOptions="Fill"
                          VerticalOptions="Fill"
                          EnableZoom="True"

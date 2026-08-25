@@ -11,9 +11,13 @@ public interface IPdfView
     PdfSource? Source { get; set; }
 
     /// <summary>
-    /// Gets the current page number (0-based index).
+    /// Gets or sets the current page number (0-based index).
+    ///
+    /// A set navigates when the document is loaded, and is otherwise remembered and applied
+    /// once it loads — assigning a page before the document is ready is honoured rather than
+    /// dropped, matching how <see cref="Zoom"/> behaves. Out-of-range values are ignored.
     /// </summary>
-    int CurrentPage { get; }
+    int CurrentPage { get; set; }
 
     /// <summary>
     /// Gets the total number of pages in the document.
