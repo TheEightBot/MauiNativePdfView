@@ -32,6 +32,7 @@ public class PdfViewiOS : IPdfView, IDisposable
     private nfloat _appliedFitScale;
     private float _zoom = 1.0f;
     private bool _zoomNeedsApply;
+    private int? _pendingPage;
 
     public PdfViewiOS()
     {
@@ -115,9 +116,26 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
     }
 
-    public int CurrentPage => _pdfView.Document != null && _pdfView.CurrentPage != null
-        ? (int)_pdfView.Document.GetPageIndex(_pdfView.CurrentPage)
-        : 0;
+    /// <inheritdoc />
+    public int CurrentPage
+    {
+        get => _pdfView.Document != null && _pdfView.CurrentPage != null
+            ? (int)_pdfView.Document.GetPageIndex(_pdfView.CurrentPage)
+            : _pendingPage ?? 0;
+        set
+        {
+            if (_pdfView.Document != null)
+            {
+                GoToPage(value);
+                return;
+            }
+
+            // No document yet. LoadDocument applies this once one is in, so a page assigned
+            // before the load is honoured rather than dropped.
+            if (value >= 0)
+                _pendingPage = value;
+        }
+    }
 
     public int PageCount => _pdfView.Document != null ? (int)_pdfView.Document.PageCount : 0;
 
@@ -708,10 +726,14 @@ public class PdfViewiOS : IPdfView, IDisposable
                     author,
                     subject));
 
-                // Navigate to default page if specified
-                if (_defaultPage > 0 && _defaultPage < pageCount)
+                // A page assigned through CurrentPage before the document arrived wins over
+                // DefaultPage: it is the more specific, more recent instruction.
+                var requestedPage = _pendingPage ?? _defaultPage;
+                _pendingPage = null;
+
+                if (requestedPage > 0 && requestedPage < pageCount)
                 {
-                    var page = document.GetPage((nint)_defaultPage);
+                    var page = document.GetPage((nint)requestedPage);
                     if (page != null)
                     {
                         _pdfView.GoToPage(page);
@@ -719,7 +741,7 @@ public class PdfViewiOS : IPdfView, IDisposable
                 }
 
                 // Trigger initial page changed event
-                var currentPageIndex = _defaultPage > 0 && _defaultPage < pageCount ? _defaultPage : 0;
+                var currentPageIndex = requestedPage > 0 && requestedPage < pageCount ? requestedPage : 0;
                 PageChanged?.Invoke(this, new PageChangedEventArgs(currentPageIndex, pageCount));
 
                 // Apply annotation visibility setting

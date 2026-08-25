@@ -247,8 +247,30 @@ private void OnPageChanged(object sender, PageChangedEventArgs e)
 | `UseBestQuality`            | `bool`                 | `true`                 | Best quality rendering         |
 | `BackgroundColor`           | `Color`                | `null`                 | Viewer background color        |
 | `EnableAnnotationRendering` | `bool`                 | `true`                 | Show PDF annotations           |
-| `CurrentPage`               | `int`                  | `0`                    | Current page (readonly)        |
-| `PageCount`                 | `int`                  | `0`                    | Total pages (readonly)         |
+| `CurrentPage`               | `int`                  | `0`                    | Current page, two-way bindable |
+| `PageCount`                 | `int`                  | `0`                    | Total pages (read-only)        |
+
+#### Binding `CurrentPage` and `PageCount`
+
+`CurrentPage` is read-write and binds **two-way by default**. Assigning it navigates, exactly
+as `GoToPage` does, and it is updated whenever the visible page changes — so a view model can
+drive the document and follow it with one binding:
+
+```xml
+<pdf:PdfView CurrentPage="{Binding PageNumber}" />
+```
+
+A page assigned before the document has loaded is honoured once it does, so binding a
+non-zero starting page works without waiting for `DocumentLoaded`. A page outside the
+document is ignored, and the property reverts to the page actually being shown, so a binding
+is never left describing a page that was never navigated to.
+
+`PageCount` describes the loaded document, so it is **read-only** — bind it as a *source*
+with `Mode=OneWayToSource`:
+
+```xml
+<pdf:PdfView PageCount="{Binding TotalPages, Mode=OneWayToSource}" />
+```
 
 #### A note on zoom values
 
@@ -491,7 +513,8 @@ public class PdfViewModel : INotifyPropertyChanged
 
     private void GoToPage(int pageIndex)
     {
-        // Page navigation handled by binding
+        // Assigning the two-way bound CurrentPage navigates the control.
+        CurrentPage = pageIndex;
     }
 }
 ```
@@ -499,7 +522,7 @@ public class PdfViewModel : INotifyPropertyChanged
 ```xml
 <pdf:PdfView Source="{Binding PdfSource}"
              CurrentPage="{Binding CurrentPage}"
-             PageCount="{Binding PageCount}" />
+             PageCount="{Binding PageCount, Mode=OneWayToSource}" />
 ```
 
 ### Password-Protected PDFs
