@@ -66,7 +66,8 @@ public class PdfView : View
             nameof(Zoom),
             typeof(float),
             typeof(PdfView),
-            1.0f);
+            1.0f,
+            propertyChanged: OnZoomPropertyChanged);
 
     /// <summary>
     /// Bindable property for minimum zoom level.
@@ -436,6 +437,13 @@ public class PdfView : View
     public event EventHandler<RenderedEventArgs>? Rendered;
 
     /// <summary>
+    /// Occurs when the zoom level being shown changes, including changes the user drives
+    /// with a pinch or a double-tap. <see cref="Zoom"/> already holds the new level when
+    /// this is raised, so a <c>TwoWay</c> binding on <see cref="Zoom"/> has already updated.
+    /// </summary>
+    public event EventHandler<ZoomChangedEventArgs>? ZoomChanged;
+
+    /// <summary>
     /// Occurs when an annotation is tapped in the PDF.
     /// Platform availability: iOS only. Android does not support annotation tap detection with the current library.
     /// </summary>
@@ -488,6 +496,25 @@ public class PdfView : View
     internal void RaiseRendered(RenderedEventArgs args)
     {
         Rendered?.Invoke(this, args);
+    }
+
+    internal void RaiseZoomChanged(ZoomChangedEventArgs args)
+    {
+        // Writing the bindable property is the whole point: it is what a TwoWay binding
+        // observes, and its property-changed callback is what raises ZoomChanged. Routing
+        // the event through the property rather than raising it here is what makes a level
+        // the caller assigned and a level the user pinched report identically. The handler's
+        // MapZoom compares against the native control before pushing anything back, so
+        // setting the level we were just told about stops here.
+        Zoom = args.Zoom;
+    }
+
+    private static void OnZoomPropertyChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is PdfView view)
+        {
+            view.ZoomChanged?.Invoke(view, new ZoomChangedEventArgs((float)newValue));
+        }
     }
 
     internal void RaiseAnnotationTapped(AnnotationTappedEventArgs args)

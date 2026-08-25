@@ -151,6 +151,23 @@ public class RenderedEventArgs : EventArgs
 }
 
 /// <summary>
+/// Event arguments for the zoom changed event.
+/// </summary>
+public class ZoomChangedEventArgs : EventArgs
+{
+    /// <summary>
+    /// Gets the zoom level now being shown, as a multiple of the fit scale
+    /// (<c>1.0</c> is the fitted document).
+    /// </summary>
+    public float Zoom { get; }
+
+    public ZoomChangedEventArgs(float zoom)
+    {
+        Zoom = zoom;
+    }
+}
+
+/// <summary>
 /// Event arguments for annotation tapped event.
 /// </summary>
 public class AnnotationTappedEventArgs : EventArgs

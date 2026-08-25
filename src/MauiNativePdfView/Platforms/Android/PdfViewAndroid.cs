@@ -40,8 +40,16 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private float _zoom = 1.0f;
     private bool _zoomNeedsApply;
     private readonly HashSet<int> _openedPages = new();
+    private float _lastReportedZoom = 1.0f;
+
+    /// <summary>
+    /// Smallest zoom movement worth publishing. A pinch redraws every frame, and without a
+    /// floor the last few bits of float noise would republish on every one of them.
+    /// </summary>
+    private const float ZoomReportThreshold = 0.001f;
 
     private TapListener? _tapListener;
+    private DrawListener? _drawListener;
 
     public PdfViewAndroid(Context context)
     {
@@ -512,6 +520,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     public event EventHandler<LinkTappedEventArgs>? LinkTapped;
     public event EventHandler<PdfTappedEventArgs>? Tapped;
     public event EventHandler<RenderedEventArgs>? Rendered;
+    public event EventHandler<ZoomChangedEventArgs>? ZoomChanged;
 
     /// <summary>
     /// This event is not supported on Android with the current AhmerPdfium library.
@@ -611,6 +620,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
             .OnPageChange(new PageChangeListener(this))
             .OnError(new ErrorListener(this))
             .OnTap(_enableTapGestures ? _tapListener ??= new TapListener(this) : null)
+            // AhmerPdfViewer has no zoom listener of any kind and PDFView is sealed, so the
+            // per-draw callback is the only place a pinch or double-tap becomes observable.
+            // See ReportZoomIfChanged for why this is cheap enough to sit on the draw path.
+            .OnDraw(_drawListener ??= new DrawListener(this))
             .OnRender(new RenderListener(this));
 
         // Note: UseBestQuality sets rendering quality (ARGB_8888 vs RGB_565)
@@ -653,6 +666,36 @@ public class PdfViewAndroid : IPdfView, IDisposable
         EnsureVisiblePagesOpen();
         ApplyPageAlignment();
         DocumentLoaded?.Invoke(this, new DocumentLoadedEventArgs(pageCount));
+    }
+
+    /// <summary>
+    /// Publishes the level the control is actually showing, so a caller bound to Zoom sees a
+    /// pinch or double-tap.
+    ///
+    /// This runs on the draw path, so it has to stay cheap: on all but the frames where the
+    /// zoom genuinely moved it is a field read and a float compare, and it allocates only
+    /// when it actually publishes.
+    ///
+    /// The threshold is what keeps the round trip closed. Publishing sets Zoom on the virtual
+    /// view, whose handler compares against this same control before pushing anything back,
+    /// so the value we just read cannot bounce; the threshold additionally stops float noise
+    /// from republishing an unchanged level on every frame of a pinch.
+    /// </summary>
+    private void ReportZoomIfChanged()
+    {
+        // Mid-apply the control is still showing the old level, and a document that has not
+        // loaded has no meaningful zoom to report.
+        if (_disposed || _zoomNeedsApply || _pageCount == 0)
+            return;
+
+        var zoom = Math.Clamp(_pdfView.Zoom, _minZoom, _maxZoom);
+
+        if (Math.Abs(zoom - _lastReportedZoom) < ZoomReportThreshold)
+            return;
+
+        _lastReportedZoom = zoom;
+        _zoom = zoom;
+        ZoomChanged?.Invoke(this, new ZoomChangedEventArgs(zoom));
     }
 
     private void OnPageChanged(int pageIndex, int pageCount)
@@ -816,6 +859,29 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
+    /// <summary>
+    /// AhmerPdfViewer exposes no zoom or scale listener — the library has none, and PDFView
+    /// is sealed so there is nothing to override either. The draw callback is the one hook
+    /// that runs after a pinch or double-tap has changed the scale.
+    /// </summary>
+    private class DrawListener : Java.Lang.Object, IOnDrawListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public DrawListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void OnLayerDrawn(global::Android.Graphics.Canvas? canvas, float pageWidth, float pageHeight, int currentPage)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                view.ReportZoomIfChanged();
+            }
+        }
+    }
+
     private class RenderListener : Java.Lang.Object, IOnRenderListener
     {
         private readonly WeakReference<PdfViewAndroid> _viewRef;
@@ -850,6 +916,12 @@ public class PdfViewAndroid : IPdfView, IDisposable
         {
             _tapListener.Dispose();
             _tapListener = null;
+        }
+
+        if (_drawListener != null)
+        {
+            _drawListener.Dispose();
+            _drawListener = null;
         }
 
         _pdfView?.Dispose();

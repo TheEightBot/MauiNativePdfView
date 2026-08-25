@@ -146,6 +146,13 @@ public interface IPdfView
     event EventHandler<PageChangedEventArgs>? PageChanged;
 
     /// <summary>
+    /// Occurs when the zoom level being shown changes, including changes the user drives
+    /// with a pinch or a double-tap. <see cref="Zoom"/> already reflects the new level when
+    /// this is raised.
+    /// </summary>
+    event EventHandler<ZoomChangedEventArgs>? ZoomChanged;
+
+    /// <summary>
     /// Occurs when an error occurs during loading or rendering.
     /// </summary>
     event EventHandler<PdfErrorEventArgs>? Error;

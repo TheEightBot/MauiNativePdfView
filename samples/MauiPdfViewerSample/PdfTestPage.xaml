@@ -89,6 +89,7 @@
                          EnableAnnotationRendering="True"
                          DocumentLoaded="OnDocumentLoaded"
                          PageChanged="OnPageChanged"
+                         ZoomChanged="OnZoomChanged"
                          Error="OnError"
                          Tapped="OnPdfTapped"
                          Rendered="OnPdfRendered"

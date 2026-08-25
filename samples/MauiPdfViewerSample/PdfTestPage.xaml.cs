@@ -306,8 +306,14 @@ public partial class PdfTestPage : ContentPage
     {
         _zoomIndex = (_zoomIndex + 1) % _zoomLevels.Length;
         PdfViewer.Zoom = _zoomLevels[_zoomIndex];
-        ToggleZoomButton.Text = $"{_zoomLevels[_zoomIndex]:0.0}x";
         StatusLabel.Text = $"Zoom: {_zoomLevels[_zoomIndex]:0.0}x — now tap the page";
+    }
+
+    // The button label follows the control rather than the last value we assigned, so a
+    // pinch or double-tap keeps it honest.
+    private void OnZoomChanged(object? sender, ZoomChangedEventArgs e)
+    {
+        ToggleZoomButton.Text = $"{e.Zoom:0.0}x";
     }
 
     private void OnToggleTapGesturesClicked(object? sender, EventArgs e)

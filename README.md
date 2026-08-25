@@ -61,6 +61,7 @@ MauiNativePdfView brings native PDF viewing capabilities to your .NET MAUI appli
 
 - `DocumentLoaded` - Fires when PDF is loaded with page count and metadata
 - `PageChanged` - Current page and total page count updates
+- `ZoomChanged` - Zoom level updates, including pinch and double-tap
 - `LinkTapped` - Intercept link taps before navigation (set `e.Handled = true` to prevent)
 - `Tapped` - General tap events with page coordinates (requires `EnableTapGestures = true`)
 - `AnnotationTapped` - Annotation tap with type, content, and bounds (iOS)
@@ -279,6 +280,26 @@ document fits the view under the current `FitPolicy` — not percentages of the 
 size. So `1.0` is the fitted document, `2.0` is twice that size, and `MinZoom="1.0"` means
 "never zoom out past fitted". Because the values are relative, they stay meaningful when the
 view resizes or the device rotates.
+
+#### Following the zoom the user sets
+
+`Zoom` reports gesture-driven changes as well as ones you assign, so it binds two-way and a
+pinch or double-tap updates the bound property:
+
+```xml
+<pdf:PdfView Zoom="{Binding ZoomLevel, Mode=TwoWay}" />
+```
+
+There is also a `ZoomChanged` event if you would rather not bind:
+
+```csharp
+private void OnZoomChanged(object sender, ZoomChangedEventArgs e)
+    => ZoomLabel.Text = $"{e.Zoom:P0}";
+```
+
+Both fire continuously while a gesture is in flight, not just when it ends — the same way
+the underlying platform controls report scale — so a bound label tracks the pinch rather than
+jumping at the end. Keep the handler cheap for that reason.
 
 ### PdfSource Types
 
