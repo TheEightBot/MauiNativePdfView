@@ -385,7 +385,10 @@ public class PdfView : View
     /// before the document has loaded is honoured once it does, rather than dropped. The
     /// property is updated whenever the visible page changes — by swipe, by fling, or by a
     /// <see cref="GoToPage"/> call — so a <c>TwoWay</c> binding tracks the document both ways.
-    /// Out-of-range values are ignored.
+    ///
+    /// A page outside the document is ignored, and the property reverts to the page actually
+    /// being shown rather than keeping the rejected value — so a binding cannot be left
+    /// describing a page that was never navigated to.
     /// </summary>
     public int CurrentPage
     {

@@ -15,7 +15,11 @@ public interface IPdfView
     ///
     /// A set navigates when the document is loaded, and is otherwise remembered and applied
     /// once it loads — assigning a page before the document is ready is honoured rather than
-    /// dropped, matching how <see cref="Zoom"/> behaves. Out-of-range values are ignored.
+    /// dropped, matching how <see cref="Zoom"/> behaves.
+    ///
+    /// A page outside the document is ignored: <see cref="CurrentPage"/> keeps reporting the
+    /// page actually being shown, which is what lets the handler revert the virtual view
+    /// rather than leave it holding a rejected value.
     /// </summary>
     int CurrentPage { get; set; }
 

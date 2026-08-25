@@ -261,8 +261,9 @@ drive the document and follow it with one binding:
 ```
 
 A page assigned before the document has loaded is honoured once it does, so binding a
-non-zero starting page works without waiting for `DocumentLoaded`. Out-of-range values are
-ignored.
+non-zero starting page works without waiting for `DocumentLoaded`. A page outside the
+document is ignored, and the property reverts to the page actually being shown, so a binding
+is never left describing a page that was never navigated to.
 
 `PageCount` describes the loaded document, so it is **read-only** — bind it as a *source*
 with `Mode=OneWayToSource`:
