@@ -229,7 +229,7 @@
                     <!-- Controls -->
                     <Grid ColumnDefinitions="90,*"
                           ColumnSpacing="12"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           RowSpacing="10">
 
                         <Label Grid.Row="0" Grid.Column="0"
@@ -293,9 +293,19 @@
                                 Clicked="OnToggleAnnotationsClicked" />
 
                         <Label Grid.Row="6" Grid.Column="0"
-                               Text="Tap Gestures"
+                               Text="Zoom"
                                Style="{StaticResource SettingsLabelStyle}" />
                         <Button Grid.Row="6" Grid.Column="1"
+                                x:Name="ToggleZoomButton"
+                                Text="1.0x"
+                                Style="{StaticResource SettingsButtonStyle}"
+                                HorizontalOptions="Start"
+                                Clicked="OnToggleZoomClicked" />
+
+                        <Label Grid.Row="7" Grid.Column="0"
+                               Text="Tap Gestures"
+                               Style="{StaticResource SettingsLabelStyle}" />
+                        <Button Grid.Row="7" Grid.Column="1"
                                 x:Name="ToggleTapGesturesButton"
                                 Text="Events Off"
                                 Style="{StaticResource SettingsButtonStyle}"

@@ -36,17 +36,38 @@ public interface IPdfView
     bool EnableLinkNavigation { get; set; }
 
     /// <summary>
-    /// Gets or sets the current zoom level (1.0 = 100%).
+    /// Gets or sets the current zoom level, as a multiple of the scale at which the document
+    /// fits the view under the active <see cref="FitPolicy"/> (1.0 = fitted).
+    ///
+    /// Platform implementations follow one contract, so the property behaves the same
+    /// everywhere:
+    /// <list type="number">
+    ///   <item>A set is clamped to <see cref="MinZoom"/>/<see cref="MaxZoom"/> and stored.</item>
+    ///   <item>The stored level is pushed to the native control as soon as it can accept one.
+    ///     Assigning Zoom before the document is loaded or the view is measured is therefore
+    ///     honoured rather than dropped.</item>
+    ///   <item>A get returns what the control is actually showing — so a pinch is reflected —
+    ///     falling back to the stored level while the control has nothing to report.</item>
+    ///   <item>The level survives events that reset the native control from underneath the
+    ///     caller: any property change that forces a reload, an explicit <see cref="Reload"/>,
+    ///     and a change in the fitted scale (rotation, resize). Whatever the user was looking
+    ///     at, pinch included, is restored afterwards. Assigning a new <see cref="Source"/> is
+    ///     the deliberate exception — a different document starts fitted at 1.0.</item>
+    ///   <item>Changing <see cref="MinZoom"/> or <see cref="MaxZoom"/> re-clamps the current
+    ///     level into the new bounds.</item>
+    /// </list>
     /// </summary>
     float Zoom { get; set; }
 
     /// <summary>
-    /// Gets or sets the minimum zoom level.
+    /// Gets or sets the minimum zoom level, as a multiple of the fit scale.
+    /// Changing it re-clamps <see cref="Zoom"/>.
     /// </summary>
     float MinZoom { get; set; }
 
     /// <summary>
-    /// Gets or sets the maximum zoom level.
+    /// Gets or sets the maximum zoom level, as a multiple of the fit scale.
+    /// Changing it re-clamps <see cref="Zoom"/>.
     /// </summary>
     float MaxZoom { get; set; }
 
