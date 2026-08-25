@@ -86,23 +86,59 @@ public partial class PdfTestPage : ContentPage
         }
     }
 
+    // ── Page binding ──────────────────────────────────────────────────────────
+    // Bound two-way to PdfView.CurrentPage: assigning it navigates, and it follows the
+    // document when the user swipes. BoundPageCount is the OneWayToSource end of the
+    // read-only PageCount.
+    private int _boundPage;
+    private int _boundPageCount;
+
+    public int BoundPage
+    {
+        get => _boundPage;
+        set
+        {
+            if (_boundPage == value)
+                return;
+
+            _boundPage = value;
+            OnPropertyChanged();
+            UpdateButtonStates();
+        }
+    }
+
+    public int BoundPageCount
+    {
+        get => _boundPageCount;
+        set
+        {
+            if (_boundPageCount == value)
+                return;
+
+            _boundPageCount = value;
+            OnPropertyChanged();
+            UpdateButtonStates();
+        }
+    }
+
     // ── Navigation ────────────────────────────────────────────────────────────
+    // Navigating by assignment rather than GoToPage, to exercise the two-way binding.
     private void OnPrevPageClicked(object? sender, EventArgs e)
     {
-        if (PdfViewer.CurrentPage > 0)
-            PdfViewer.GoToPage(PdfViewer.CurrentPage - 1);
+        if (BoundPage > 0)
+            BoundPage--;
     }
 
     private void OnNextPageClicked(object? sender, EventArgs e)
     {
-        if (PdfViewer.CurrentPage < PdfViewer.PageCount - 1)
-            PdfViewer.GoToPage(PdfViewer.CurrentPage + 1);
+        if (BoundPage < BoundPageCount - 1)
+            BoundPage++;
     }
 
     private void UpdateButtonStates()
     {
-        PrevPageButton.IsEnabled = PdfViewer.CurrentPage > 0;
-        NextPageButton.IsEnabled = PdfViewer.CurrentPage < PdfViewer.PageCount - 1;
+        PrevPageButton.IsEnabled = BoundPage > 0;
+        NextPageButton.IsEnabled = BoundPage < BoundPageCount - 1;
     }
 
     // ── PDF events ────────────────────────────────────────────────────────────

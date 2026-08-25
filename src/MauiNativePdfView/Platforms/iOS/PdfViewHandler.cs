@@ -26,6 +26,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         [nameof(PdfView.DisplayMode)] = MapDisplayMode,
         [nameof(PdfView.ScrollOrientation)] = MapScrollOrientation,
         [nameof(PdfView.DefaultPage)] = MapDefaultPage,
+        [nameof(PdfView.CurrentPage)] = MapCurrentPage,
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
         [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
@@ -83,6 +84,9 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
             _pdfViewWrapper.DisplayMode = VirtualView.DisplayMode;
             _pdfViewWrapper.ScrollOrientation = VirtualView.ScrollOrientation;
             _pdfViewWrapper.DefaultPage = VirtualView.DefaultPage;
+            // Through the mapper, not a direct assignment: connect then gets the same
+            // out-of-range handling as every later binding update.
+            MapCurrentPage(this, VirtualView);
             _pdfViewWrapper.EnableAntialiasing = VirtualView.EnableAntialiasing;
             _pdfViewWrapper.UseBestQuality = VirtualView.UseBestQuality;
             _pdfViewWrapper.BackgroundColor = VirtualView.BackgroundColor;
@@ -254,6 +258,29 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PdfKit.PdfView>
         if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.DefaultPage != view.DefaultPage)
         {
             handler._pdfViewWrapper.DefaultPage = view.DefaultPage;
+        }
+    }
+
+    public static void MapCurrentPage(PdfViewHandler handler, PdfView view)
+    {
+        var wrapper = handler._pdfViewWrapper;
+
+        // The inequality guard is what stops the round trip: a page change reported by the
+        // control writes CurrentPage on the virtual view, which brings us straight back here.
+        if (wrapper == null || wrapper.CurrentPage == view.CurrentPage)
+        {
+            return;
+        }
+
+        wrapper.CurrentPage = view.CurrentPage;
+
+        // The control declines a page outside the document, and navigation lands before the
+        // assignment returns, so its answer is already final here. Take it back, or the
+        // property — and any TwoWay binding on it — would be left describing a page that was
+        // never navigated to. The guard above ends the recursion this second write starts.
+        if (wrapper.CurrentPage != view.CurrentPage)
+        {
+            view.CurrentPage = wrapper.CurrentPage;
         }
     }
 

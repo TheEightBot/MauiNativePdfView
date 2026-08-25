@@ -82,7 +82,24 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
-    public int CurrentPage => _currentPage;
+    /// <inheritdoc />
+    public int CurrentPage
+    {
+        get => _currentPage;
+        set
+        {
+            if (_pageCount > 0)
+            {
+                GoToPage(value);
+                return;
+            }
+
+            // No document yet. LoadDocument replays _currentPage as the page to restore,
+            // so recording it here is what makes a page assigned before the load stick.
+            if (value >= 0)
+                _currentPage = value;
+        }
+    }
 
     public int PageCount => _pageCount;
 

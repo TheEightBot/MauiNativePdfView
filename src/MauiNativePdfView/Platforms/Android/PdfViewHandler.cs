@@ -31,6 +31,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         [nameof(PdfView.DisplayMode)] = MapDisplayMode,
         [nameof(PdfView.ScrollOrientation)] = MapScrollOrientation,
         [nameof(PdfView.DefaultPage)] = MapDefaultPage,
+        [nameof(PdfView.CurrentPage)] = MapCurrentPage,
         [nameof(PdfView.EnableAntialiasing)] = MapEnableAntialiasing,
         [nameof(PdfView.UseBestQuality)] = MapUseBestQuality,
         [nameof(PdfView.BackgroundColor)] = MapBackgroundColor,
@@ -90,6 +91,7 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         MapDisplayMode(this, VirtualView);
         MapScrollOrientation(this, VirtualView);
         MapDefaultPage(this, VirtualView);
+        MapCurrentPage(this, VirtualView);
         MapEnableAntialiasing(this, VirtualView);
         MapUseBestQuality(this, VirtualView);
         MapBackgroundColor(this, VirtualView);
@@ -259,6 +261,29 @@ public partial class PdfViewHandler : ViewHandler<PdfView, PDFView>
         if (handler._pdfViewWrapper != null && handler._pdfViewWrapper.DefaultPage != view.DefaultPage)
         {
             handler._pdfViewWrapper.DefaultPage = view.DefaultPage;
+        }
+    }
+
+    private static void MapCurrentPage(PdfViewHandler handler, PdfView view)
+    {
+        var wrapper = handler._pdfViewWrapper;
+
+        // The inequality guard is what stops the round trip: a page change reported by the
+        // control writes CurrentPage on the virtual view, which brings us straight back here.
+        if (wrapper == null || wrapper.CurrentPage == view.CurrentPage)
+        {
+            return;
+        }
+
+        wrapper.CurrentPage = view.CurrentPage;
+
+        // The control declines a page outside the document, and navigation lands before the
+        // assignment returns, so its answer is already final here. Take it back, or the
+        // property — and any TwoWay binding on it — would be left describing a page that was
+        // never navigated to. The guard above ends the recursion this second write starts.
+        if (wrapper.CurrentPage != view.CurrentPage)
+        {
+            view.CurrentPage = wrapper.CurrentPage;
         }
     }
 
