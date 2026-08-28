@@ -74,7 +74,6 @@ public class PdfViewiOS : IPdfView, IDisposable
 
             // PdfKit builds its scroll view lazily and can replace it across a document
             // load, so the zoom hook is refreshed from here rather than the ctor.
-            // UpdateZoomSampling();
             EnsureZoomDelegateProxy();
 
             // MinZoom/MaxZoom are multiples of the fit scale, and the fit scale moves
