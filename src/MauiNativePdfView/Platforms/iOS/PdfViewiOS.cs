@@ -2,6 +2,7 @@ using MauiNativePdfView.Abstractions;
 using PdfKit;
 using UIKit;
 using Foundation;
+using ObjCRuntime;
 
 namespace MauiNativePdfView.Platforms.iOS;
 
@@ -35,6 +36,9 @@ public class PdfViewiOS : IPdfView, IDisposable
     private int? _pendingPage;
     private NSObject? _scaleChangedObserver;
     private float _lastReportedZoom = 1.0f;
+    private UIScrollView? _zoomScrollView;
+    private ZoomReportingScrollViewDelegate? _zoomDelegateProxy;
+    private bool _reportingZoom;
 
     /// <summary>
     /// Smallest zoom movement worth publishing. A pinch posts a scale change per frame, and
@@ -68,6 +72,10 @@ public class PdfViewiOS : IPdfView, IDisposable
             if (_needsFitReapply)
                 ApplyFitPolicy();
 
+            // PdfKit builds its scroll view lazily and can replace it across a document
+            // load, so the zoom hook is refreshed from here rather than the ctor.
+            EnsureZoomDelegateProxy();
+
             // MinZoom/MaxZoom are multiples of the fit scale, and the fit scale moves
             // whenever the view resizes (rotation, split view, first layout). Re-derive
             // the native bounds whenever it does — this also covers the initial pass,
@@ -96,13 +104,12 @@ public class PdfViewiOS : IPdfView, IDisposable
         // Subscribe to annotation hit notifications
         _annotationHitObserver = PdfKit.PdfView.Notifications.ObserveAnnotationHit(OnAnnotationHit);
 
-        // PdfKit posts this whenever ScaleFactor moves, which is the only signal that a
-        // pinch or double-tap happened — its delegate has no scale callback. Scoped to this
-        // view so a second PdfView on screen does not report through us.
-        _scaleChangedObserver = NSNotificationCenter.DefaultCenter.AddObserver(
-            PdfKit.PdfView.ScaleChangedNotification,
-            _ => ReportZoomIfChanged(),
-            _pdfView);
+        // PdfKit posts this from its own ScaleFactor bookkeeping, which covers a pinch but
+        // NOT the double-tap zoom — that one drives PdfKit's internal scroll view directly
+        // and posts nothing, which is what the zoom sampler is for. Kept as the cheap pinch
+        // path so a pinch reports without waiting on the next sampled frame.
+        // Scoped to this view so a second PdfView on screen does not report through us.
+        _scaleChangedObserver = PdfKit.PdfView.Notifications.ObserveScaleChanged(_pdfView, (_, _) => ReportZoomIfChanged());
 
         // Set delegate to intercept link clicks
         _pdfView.WeakDelegate = new PdfViewDelegateImpl(this);
@@ -215,8 +222,20 @@ public class PdfViewiOS : IPdfView, IDisposable
         get => _zoomNeedsApply ? _zoom : ReadZoom();
         set
         {
+            // The echo of our own report: the handler's MapZoom pushes the level we just
+            // published straight back down. Writing ScaleFactor here would cancel PdfKit's
+            // in-flight double-tap animation, and _zoom already holds the reported level,
+            // so there is nothing to do. See ReportZoomIfChanged.
+            if (_reportingZoom)
+                return;
+
             _zoom = Math.Clamp(value, _minZoom, _maxZoom);
             _zoomNeedsApply = !TryApplyZoom(_zoom);
+
+            // Caller-originated, so the caller already knows this level. Recording it keeps
+            // ReportZoomIfChanged's threshold from swallowing a later gesture back to it.
+            if (!_zoomNeedsApply)
+                _lastReportedZoom = _zoom;
         }
     }
 
@@ -253,7 +272,14 @@ public class PdfViewiOS : IPdfView, IDisposable
     private void SyncZoom()
     {
         if (_zoomNeedsApply && TryApplyZoom(_zoom))
+        {
             _zoomNeedsApply = false;
+
+            // The apply above posted its ScaleChanged while _zoomNeedsApply still muted
+            // reporting, so publish the level that landed. Without this a re-fit — a reload,
+            // a rotation — moves the control without the bound Zoom ever hearing about it.
+            ReportZoomIfChanged();
+        }
     }
 
     /// <returns><c>false</c> when the view has no fit scale yet, so nothing can be applied.</returns>
@@ -834,7 +860,79 @@ public class PdfViewiOS : IPdfView, IDisposable
 
         _lastReportedZoom = zoom;
         _zoom = zoom;
-        ZoomChanged?.Invoke(this, new ZoomChangedEventArgs(zoom));
+
+        // The report round-trips synchronously — ZoomChanged, the handler, PdfView's Zoom
+        // property, MapZoom, and back into our own Zoom setter. MapZoom breaks the loop by
+        // comparing against the live native scale, which is a moving target mid-animation,
+        // so it would write ScaleFactor back and cancel PdfKit's double-tap zoom part-way.
+        // The flag is the loop-breaker instead: the control is already at this level.
+        _reportingZoom = true;
+        try
+        {
+            ZoomChanged?.Invoke(this, new ZoomChangedEventArgs(zoom));
+        }
+        finally
+        {
+            _reportingZoom = false;
+        }
+    }
+
+    /// <summary>
+    /// Installs (or re-installs) the passthrough delegate on PdfKit's scroll view, which is
+    /// where the double-tap zoom becomes observable: <c>scrollViewDidZoom:</c> fires for a
+    /// programmatic animated zoom as well as for a pinch, unlike <c>scrollViewDidEndZooming:</c>.
+    ///
+    /// The slot has to be proxied rather than taken. It holds PdfKit's own delegate, without
+    /// which the scroll view will not scroll, page or zoom, and .NET's <c>DidZoom</c> event
+    /// would evict it — that is the "Event registration is overwriting existing delegate"
+    /// exception. Assigning WeakDelegate directly avoids the event shim entirely.
+    /// </summary>
+    private void EnsureZoomDelegateProxy()
+    {
+        if (_disposed)
+            return;
+
+        if (_zoomScrollView?.Superview == null)
+        {
+            // The same scroll view ApplyPageAlignment reaches into, which keeps the two hacks
+            // agreeing on which view PdfKit is actually driving. PdfKit builds it lazily and
+            // can replace it across a document load, hence the re-check every layout pass.
+            _zoomScrollView = FindInnerScrollView(_pdfView);
+        }
+
+        if (_zoomScrollView == null)
+            return;
+
+        // Already ours; a reference compare is the whole steady-state cost.
+        if (ReferenceEquals(_zoomScrollView.WeakDelegate, _zoomDelegateProxy))
+            return;
+
+        // PdfKit has either not set its delegate yet or has reclaimed the slot. Wrap whatever
+        // is in there now rather than reinstating a stale capture.
+        var proxy = new ZoomReportingScrollViewDelegate(this, _zoomScrollView);
+        _zoomScrollView.WeakDelegate = proxy;
+
+        _zoomDelegateProxy?.Dispose();
+        _zoomDelegateProxy = proxy;
+    }
+
+    /// <summary>
+    /// Hands the delegate slot back to PdfKit. Restoring rather than nulling matters: leaving
+    /// it empty would strip PdfKit of its own delegate on the way out.
+    /// </summary>
+    private void RemoveZoomDelegateProxy()
+    {
+        if (_zoomDelegateProxy == null)
+            return;
+
+        if (_zoomScrollView != null &&
+            ReferenceEquals(_zoomScrollView.WeakDelegate, _zoomDelegateProxy))
+        {
+            _zoomScrollView.WeakDelegate = _zoomDelegateProxy.Original;
+        }
+
+        _zoomDelegateProxy.Dispose();
+        _zoomDelegateProxy = null;
     }
 
     private void OnPageChangedNotification(NSNotification notification)
@@ -957,6 +1055,9 @@ public class PdfViewiOS : IPdfView, IDisposable
             _tapGestureRecognizer = null;
         }
 
+        RemoveZoomDelegateProxy();
+        _zoomScrollView = null;
+
         // Drop the layout hooks before disposing: UIKit can still lay the view out during
         // teardown, and they call back into this instance.
         _pdfView.WillLayoutSubviewsAction = null;
@@ -986,6 +1087,197 @@ public class PdfViewiOS : IPdfView, IDisposable
     }
 
     /// <summary>
+    /// A passthrough <see cref="UIScrollViewDelegate"/> for PdfKit's internal scroll view:
+    /// it captures <c>scrollViewDidZoom:</c> so a double-tap zoom can be reported, and
+    /// forwards every other message to the delegate it displaced.
+    ///
+    /// Every protocol method is overridden and forwarded — a partial proxy would silently
+    /// deny PdfKit the callbacks it relies on to scroll, page and zoom.
+    /// </summary>
+    private sealed class ZoomReportingScrollViewDelegate : UIScrollViewDelegate
+    {
+        private const string SelScrolled = "scrollViewDidScroll:";
+        private const string SelDidZoom = "scrollViewDidZoom:";
+        private const string SelDraggingStarted = "scrollViewWillBeginDragging:";
+        private const string SelWillEndDragging = "scrollViewWillEndDragging:withVelocity:targetContentOffset:";
+        private const string SelDraggingEnded = "scrollViewDidEndDragging:willDecelerate:";
+        private const string SelDecelerationStarted = "scrollViewWillBeginDecelerating:";
+        private const string SelDecelerationEnded = "scrollViewDidEndDecelerating:";
+        private const string SelScrollAnimationEnded = "scrollViewDidEndScrollingAnimation:";
+        private const string SelViewForZooming = "viewForZoomingInScrollView:";
+        private const string SelZoomingStarted = "scrollViewWillBeginZooming:withView:";
+        private const string SelZoomingEnded = "scrollViewDidEndZooming:withView:atScale:";
+        private const string SelShouldScrollToTop = "scrollViewShouldScrollToTop:";
+        private const string SelScrolledToTop = "scrollViewDidScrollToTop:";
+        private const string SelDidChangeInset = "scrollViewDidChangeAdjustedContentInset:";
+
+        /// <summary>
+        /// The selectors this class both overrides and forwards: the ones probed on the original
+        /// at construction, and — <see cref="SelDidZoom"/> aside, which this proxy always claims
+        /// as its own — the only ones it will answer <c>respondsToSelector:</c> for on the
+        /// original's behalf.
+        /// </summary>
+        private static readonly HashSet<string> ForwardableSelectors = new(StringComparer.Ordinal)
+        {
+            SelScrolled, SelDidZoom, SelDraggingStarted, SelWillEndDragging, SelDraggingEnded,
+            SelDecelerationStarted, SelDecelerationEnded, SelScrollAnimationEnded,
+            SelViewForZooming, SelZoomingStarted, SelZoomingEnded, SelShouldScrollToTop,
+            SelScrolledToTop, SelDidChangeInset,
+        };
+
+        private readonly WeakReference<PdfViewiOS> _owner;
+        private readonly IUIScrollViewDelegate? _original;
+
+        /// <summary>
+        /// Which of the <see cref="ForwardableSelectors"/> the displaced delegate actually
+        /// implements, probed once here rather than on every callback: these methods fire every
+        /// frame while the user scrolls or zooms.
+        /// </summary>
+        private readonly HashSet<string> _originalResponds = new(StringComparer.Ordinal);
+
+        public ZoomReportingScrollViewDelegate(PdfViewiOS owner, UIScrollView scrollView)
+        {
+            _owner = new WeakReference<PdfViewiOS>(owner);
+
+            // Captured twice over: as NSObject to answer respondsToSelector: on its behalf,
+            // and as the protocol interface to forward through with the right signatures.
+            Original = scrollView.WeakDelegate;
+            _original = Original != null
+                ? Runtime.GetINativeObject<IUIScrollViewDelegate>(Original.Handle, owns: false)
+                : null;
+
+            if (Original != null)
+            {
+                foreach (var selector in ForwardableSelectors)
+                {
+                    if (Original.RespondsToSelector(new Selector(selector)))
+                        _originalResponds.Add(selector);
+                }
+            }
+        }
+
+        /// <summary>The delegate this proxy displaced, so Dispose can put it back.</summary>
+        internal NSObject? Original { get; }
+
+        /// <summary>
+        /// The generated <see cref="IUIScrollViewDelegate"/> extension methods do not guard on
+        /// <c>respondsToSelector:</c>, so forwarding blind to an original that lacks the method
+        /// would be an unrecognised-selector crash.
+        /// </summary>
+        private bool Forwards(string selector)
+            => _original != null && _originalResponds.Contains(selector);
+
+        /// <summary>
+        /// UIScrollView branches on which delegate methods exist — most sharply
+        /// <c>viewForZoomingInScrollView:</c>, which gates zooming altogether — so the proxy has
+        /// to present the same profile as the delegate it stands in front of.
+        /// </summary>
+        public override bool RespondsToSelector(Selector? sel)
+        {
+            var name = sel?.Name;
+
+            // Ours unconditionally: it is the whole point of the proxy.
+            if (name == SelDidZoom)
+                return true;
+
+            // Answer for the original, but only for selectors this class actually overrides. An
+            // unknown one — a method a future iOS adds that this class does not implement — is
+            // declined rather than mirrored, because claiming a selector we cannot forward is an
+            // unrecognised-selector crash. PdfKit loses that one callback, not the app.
+            if (name != null && ForwardableSelectors.Contains(name))
+                return _originalResponds.Contains(name);
+
+            return base.RespondsToSelector(sel);
+        }
+
+        public override void DidZoom(UIScrollView scrollView)
+        {
+            if (Forwards(SelDidZoom))
+                _original!.DidZoom(scrollView);
+
+            if (_owner.TryGetTarget(out var owner))
+                owner.ReportZoomIfChanged();
+        }
+
+        public override void Scrolled(UIScrollView scrollView)
+        {
+            if (Forwards(SelScrolled))
+                _original!.Scrolled(scrollView);
+        }
+
+        public override void DraggingStarted(UIScrollView scrollView)
+        {
+            if (Forwards(SelDraggingStarted))
+                _original!.DraggingStarted(scrollView);
+        }
+
+        public override void WillEndDragging(UIScrollView scrollView, CoreGraphics.CGPoint velocity, ref CoreGraphics.CGPoint targetContentOffset)
+        {
+            if (Forwards(SelWillEndDragging))
+                _original!.WillEndDragging(scrollView, velocity, ref targetContentOffset);
+        }
+
+        public override void DraggingEnded(UIScrollView scrollView, bool willDecelerate)
+        {
+            if (Forwards(SelDraggingEnded))
+                _original!.DraggingEnded(scrollView, willDecelerate);
+        }
+
+        public override void DecelerationStarted(UIScrollView scrollView)
+        {
+            if (Forwards(SelDecelerationStarted))
+                _original!.DecelerationStarted(scrollView);
+        }
+
+        public override void DecelerationEnded(UIScrollView scrollView)
+        {
+            if (Forwards(SelDecelerationEnded))
+                _original!.DecelerationEnded(scrollView);
+        }
+
+        public override void ScrollAnimationEnded(UIScrollView scrollView)
+        {
+            if (Forwards(SelScrollAnimationEnded))
+                _original!.ScrollAnimationEnded(scrollView);
+        }
+
+        // The forward that matters most: nil here disables zooming outright. The signature is
+        // annotated non-nullable, but nil is a legal answer to UIKit and means "nothing to
+        // zoom" — and the RespondsToSelector mirroring means UIScrollView only ever asks when
+        // PdfKit's delegate answers, so the null branch is unreachable in practice.
+        public override UIView ViewForZoomingInScrollView(UIScrollView scrollView)
+            => Forwards(SelViewForZooming) ? _original!.ViewForZoomingInScrollView(scrollView) : null!;
+
+        public override void ZoomingStarted(UIScrollView scrollView, UIView? view)
+        {
+            if (Forwards(SelZoomingStarted))
+                _original!.ZoomingStarted(scrollView, view!);
+        }
+
+        public override void ZoomingEnded(UIScrollView scrollView, UIView? withView, nfloat atScale)
+        {
+            if (Forwards(SelZoomingEnded))
+                _original!.ZoomingEnded(scrollView, withView!, atScale);
+        }
+
+        // true is UIKit's own default for an unimplemented delegate.
+        public override bool ShouldScrollToTop(UIScrollView scrollView)
+            => Forwards(SelShouldScrollToTop) ? _original!.ShouldScrollToTop(scrollView) : true;
+
+        public override void ScrolledToTop(UIScrollView scrollView)
+        {
+            if (Forwards(SelScrolledToTop))
+                _original!.ScrolledToTop(scrollView);
+        }
+
+        public override void DidChangeAdjustedContentInset(UIScrollView scrollView)
+        {
+            if (Forwards(SelDidChangeInset))
+                _original!.DidChangeAdjustedContentInset(scrollView);
+        }
+    }
+
+    /// <summary>
     /// Delegate implementation to intercept link clicks in PDFView.
     /// </summary>
     private class PdfViewDelegateImpl : PdfViewDelegate
@@ -998,7 +1290,7 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
 
         [Export("PDFViewWillClickOnLink:withURL:")]
-        public void WillClickOnLink(PdfKit.PdfView sender, NSUrl url)
+        public override void WillClickOnLink(PdfKit.PdfView sender, NSUrl url)
         {
             if (!_owner.TryGetTarget(out var owner))
             {
@@ -1012,7 +1304,7 @@ public class PdfViewiOS : IPdfView, IDisposable
             // If the event was not handled and navigation is enabled, open the URL
             if (!args.Handled && owner.EnableLinkNavigation)
             {
-                UIKit.UIApplication.SharedApplication.OpenUrl(url);
+                UIKit.UIApplication.SharedApplication.OpenUrl(url, new UIApplicationOpenUrlOptions { OpenInPlace = true }, _ => { });
             }
         }
     }
