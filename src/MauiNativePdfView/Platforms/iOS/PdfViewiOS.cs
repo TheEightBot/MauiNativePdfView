@@ -1113,12 +1113,14 @@ public class PdfViewiOS : IPdfView, IDisposable
         private const string SelDidChangeInset = "scrollViewDidChangeAdjustedContentInset:";
 
         /// <summary>
-        /// The selectors this class both overrides and forwards, and therefore the only ones
-        /// it will answer <c>respondsToSelector:</c> for on the original's behalf.
+        /// The selectors this class both overrides and forwards: the ones probed on the original
+        /// at construction, and — <see cref="SelDidZoom"/> aside, which this proxy always claims
+        /// as its own — the only ones it will answer <c>respondsToSelector:</c> for on the
+        /// original's behalf.
         /// </summary>
-        private static readonly HashSet<string> ForwardableSelectors = new()
+        private static readonly HashSet<string> ForwardableSelectors = new(StringComparer.Ordinal)
         {
-            SelScrolled, SelDraggingStarted, SelWillEndDragging, SelDraggingEnded,
+            SelScrolled, SelDidZoom, SelDraggingStarted, SelWillEndDragging, SelDraggingEnded,
             SelDecelerationStarted, SelDecelerationEnded, SelScrollAnimationEnded,
             SelViewForZooming, SelZoomingStarted, SelZoomingEnded, SelShouldScrollToTop,
             SelScrolledToTop, SelDidChangeInset,
@@ -1126,6 +1128,13 @@ public class PdfViewiOS : IPdfView, IDisposable
 
         private readonly WeakReference<PdfViewiOS> _owner;
         private readonly IUIScrollViewDelegate? _original;
+
+        /// <summary>
+        /// Which of the <see cref="ForwardableSelectors"/> the displaced delegate actually
+        /// implements, probed once here rather than on every callback: these methods fire every
+        /// frame while the user scrolls or zooms.
+        /// </summary>
+        private readonly HashSet<string> _originalResponds = new(StringComparer.Ordinal);
 
         public ZoomReportingScrollViewDelegate(PdfViewiOS owner, UIScrollView scrollView)
         {
@@ -1137,6 +1146,15 @@ public class PdfViewiOS : IPdfView, IDisposable
             _original = Original != null
                 ? Runtime.GetINativeObject<IUIScrollViewDelegate>(Original.Handle, owns: false)
                 : null;
+
+            if (Original != null)
+            {
+                foreach (var selector in ForwardableSelectors)
+                {
+                    if (Original.RespondsToSelector(new Selector(selector)))
+                        _originalResponds.Add(selector);
+                }
+            }
         }
 
         /// <summary>The delegate this proxy displaced, so Dispose can put it back.</summary>
@@ -1148,7 +1166,7 @@ public class PdfViewiOS : IPdfView, IDisposable
         /// would be an unrecognised-selector crash.
         /// </summary>
         private bool Forwards(string selector)
-            => _original != null && Original?.RespondsToSelector(new Selector(selector)) == true;
+            => _original != null && _originalResponds.Contains(selector);
 
         /// <summary>
         /// UIScrollView branches on which delegate methods exist — most sharply
@@ -1168,7 +1186,7 @@ public class PdfViewiOS : IPdfView, IDisposable
             // declined rather than mirrored, because claiming a selector we cannot forward is an
             // unrecognised-selector crash. PdfKit loses that one callback, not the app.
             if (name != null && ForwardableSelectors.Contains(name))
-                return Original?.RespondsToSelector(sel) ?? false;
+                return _originalResponds.Contains(name);
 
             return base.RespondsToSelector(sel);
         }
@@ -1177,8 +1195,6 @@ public class PdfViewiOS : IPdfView, IDisposable
         {
             if (Forwards(SelDidZoom))
                 _original!.DidZoom(scrollView);
-
-            Console.WriteLine("Got scrollViewDidZoom");
 
             if (_owner.TryGetTarget(out var owner))
                 owner.ReportZoomIfChanged();
