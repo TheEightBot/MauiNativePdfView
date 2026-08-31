@@ -222,14 +222,20 @@ public class PdfViewiOS : IPdfView, IDisposable
         get => _zoomNeedsApply ? _zoom : ReadZoom();
         set
         {
+            var clamped = Math.Clamp(value, _minZoom, _maxZoom);
+
             // The echo of our own report: the handler's MapZoom pushes the level we just
-            // published straight back down. Writing ScaleFactor here would cancel PdfKit's
-            // in-flight double-tap animation, and _zoom already holds the reported level,
-            // so there is nothing to do. See ReportZoomIfChanged.
-            if (_reportingZoom)
+            // published straight back down. Writing ScaleFactor for that would only cancel
+            // PdfKit's in-flight zoom, and _zoom already holds the level, so it is dropped.
+            //
+            // Matched on the value, not merely on "a report is in flight". A DIFFERENT level
+            // arriving mid-report is a real caller request — an app re-setting Zoom from its
+            // own ZoomChanged handler, which Android honours. Dropping it wholesale left the
+            // bound property reading 1.5 while the control still showed 2.5.
+            if (_reportingZoom && Math.Abs(clamped - _lastReportedZoom) < ZoomReportThreshold)
                 return;
 
-            _zoom = Math.Clamp(value, _minZoom, _maxZoom);
+            _zoom = clamped;
             _zoomNeedsApply = !TryApplyZoom(_zoom);
 
             // Caller-originated, so the caller already knows this level. Recording it keeps
@@ -897,7 +903,16 @@ public class PdfViewiOS : IPdfView, IDisposable
             // The same scroll view ApplyPageAlignment reaches into, which keeps the two hacks
             // agreeing on which view PdfKit is actually driving. PdfKit builds it lazily and
             // can replace it across a document load, hence the re-check every layout pass.
-            _zoomScrollView = FindInnerScrollView(_pdfView);
+            var replacement = FindInnerScrollView(_pdfView);
+
+            if (!ReferenceEquals(replacement, _zoomScrollView))
+            {
+                // Hand the outgoing scroll view its own delegate back before dropping it.
+                // Disposing the proxy while that view still points at it leaves the view
+                // messaging freed memory the next time it scrolls.
+                RemoveZoomDelegateProxy();
+                _zoomScrollView = replacement;
+            }
         }
 
         if (_zoomScrollView == null)
@@ -1304,7 +1319,9 @@ public class PdfViewiOS : IPdfView, IDisposable
             // If the event was not handled and navigation is enabled, open the URL
             if (!args.Handled && owner.EnableLinkNavigation)
             {
-                UIKit.UIApplication.SharedApplication.OpenUrl(url, new UIApplicationOpenUrlOptions { OpenInPlace = true }, _ => { });
+                // Empty options: OpenInPlace is a document-provider flag about whether a file
+                // URL is opened in place or copied, and means nothing for a link out of a PDF.
+                UIKit.UIApplication.SharedApplication.OpenUrl(url, new UIApplicationOpenUrlOptions(), null);
             }
         }
     }
