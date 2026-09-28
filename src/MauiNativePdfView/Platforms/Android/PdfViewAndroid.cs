@@ -37,6 +37,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private int _currentPage = 0;
     private int _pageCount = 0;
     private bool _disposed;
+    private bool _wasDetached;
     private float _zoom = 1.0f;
     private bool _zoomNeedsApply;
     private readonly HashSet<int> _openedPages = new();
@@ -50,6 +51,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     private TapListener? _tapListener;
     private DrawListener? _drawListener;
+    private AttachStateListener? _attachStateListener;
 
     public PdfViewAndroid(Context context)
     {
@@ -58,6 +60,12 @@ public class PdfViewAndroid : IPdfView, IDisposable
         // sharing the PdfView's grid cell. Start transparent so an unset MAUI BackgroundColor
         // composites the way callers expect.
         _pdfView.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
+
+        // PDFView releases its document when detached from the window - which happens whenever
+        // another page covers this one, not just on a real teardown - and never reloads on its
+        // own. Reload on genuine reattach instead of relying on callers to notice and ask for it.
+        _attachStateListener = new AttachStateListener(this);
+        _pdfView.AddOnAttachStateChangeListener(_attachStateListener);
     }
 
     /// <summary>
@@ -543,6 +551,22 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     #endregion
 
+    private void OnDetachedFromWindow()
+    {
+        _wasDetached = true;
+    }
+
+    // Only reload on a genuine reattach after a real detach - not the initial attach every
+    // view gets when it's first created, which this would otherwise also fire on.
+    private void OnReattachedToWindow()
+    {
+        if (_disposed || !_wasDetached)
+            return;
+
+        _wasDetached = false;
+        LoadDocument();
+    }
+
     private void LoadDocument(bool preserveZoom = true)
     {
         if (_source == null)
@@ -900,6 +924,32 @@ public class PdfViewAndroid : IPdfView, IDisposable
         }
     }
 
+    private class AttachStateListener : Java.Lang.Object, global::Android.Views.View.IOnAttachStateChangeListener
+    {
+        private readonly WeakReference<PdfViewAndroid> _viewRef;
+
+        public AttachStateListener(PdfViewAndroid view)
+        {
+            _viewRef = new WeakReference<PdfViewAndroid>(view);
+        }
+
+        public void OnViewAttachedToWindow(global::Android.Views.View attachedView)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                view.OnReattachedToWindow();
+            }
+        }
+
+        public void OnViewDetachedFromWindow(global::Android.Views.View detachedView)
+        {
+            if (_viewRef.TryGetTarget(out var view))
+            {
+                view.OnDetachedFromWindow();
+            }
+        }
+    }
+
     #endregion
 
     public void Dispose()
@@ -911,6 +961,13 @@ public class PdfViewAndroid : IPdfView, IDisposable
         // and library callbacks still in flight, run after this and would otherwise touch
         // a disposed Java object and throw on the UI thread.
         _disposed = true;
+
+        if (_attachStateListener != null)
+        {
+            _pdfView?.RemoveOnAttachStateChangeListener(_attachStateListener);
+            _attachStateListener.Dispose();
+            _attachStateListener = null;
+        }
 
         if (_tapListener != null)
         {
