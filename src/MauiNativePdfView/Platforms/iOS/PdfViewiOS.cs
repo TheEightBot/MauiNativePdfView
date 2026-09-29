@@ -104,10 +104,11 @@ public class PdfViewiOS : IPdfView, IDisposable
         // Subscribe to annotation hit notifications
         _annotationHitObserver = PdfKit.PdfView.Notifications.ObserveAnnotationHit(OnAnnotationHit);
 
-        // PdfKit posts this from its own ScaleFactor bookkeeping, which covers a pinch but
-        // NOT the double-tap zoom — that one drives PdfKit's internal scroll view directly
-        // and posts nothing, which is what the zoom sampler is for. Kept as the cheap pinch
-        // path so a pinch reports without waiting on the next sampled frame.
+        // PdfKit posts this once a scroll-view-driven zoom settles — a pinch or a double-tap —
+        // and nothing while one is in flight; the scroll view delegate proxy covers the
+        // in-flight frames (see EnsureZoomDelegateProxy). Kept as the settle signal, and as
+        // the fallback for any stretch where PdfKit has reclaimed the delegate slot before
+        // the next layout pass re-proxies it.
         // Scoped to this view so a second PdfView on screen does not report through us.
         _scaleChangedObserver = PdfKit.PdfView.Notifications.ObserveScaleChanged(_pdfView, (_, _) => ReportZoomIfChanged());
 
@@ -872,6 +873,11 @@ public class PdfViewiOS : IPdfView, IDisposable
         // comparing against the live native scale, which is a moving target mid-animation,
         // so it would write ScaleFactor back and cancel PdfKit's double-tap zoom part-way.
         // The flag is the loop-breaker instead: the control is already at this level.
+        //
+        // Restored rather than cleared: a handler that re-sets Zoom moves ScaleFactor, which
+        // can report again from inside this one, and clearing on the way out of that inner
+        // report would unguard the rest of this outer one.
+        var wasReporting = _reportingZoom;
         _reportingZoom = true;
         try
         {
@@ -879,7 +885,7 @@ public class PdfViewiOS : IPdfView, IDisposable
         }
         finally
         {
-            _reportingZoom = false;
+            _reportingZoom = wasReporting;
         }
     }
 
