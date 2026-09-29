@@ -40,6 +40,9 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private bool _wasDetached;
     private float _zoom = 1.0f;
     private bool _zoomNeedsApply;
+    private float _offsetX;
+    private float _offsetY;
+    private bool _positionNeedsApply;
     private readonly HashSet<int> _openedPages = new();
     private float _lastReportedZoom = 1.0f;
 
@@ -183,8 +186,8 @@ public class PdfViewAndroid : IPdfView, IDisposable
     }
 
     /// <summary>
-    /// Pushes <see cref="_zoom"/> back to the control once it can accept one. Posted so it
-    /// runs after the layout pass that follows a load.
+    /// Pushes <see cref="_zoom"/> (and, after a reattach, the pan position) back to the
+    /// control. Posted so it runs after the layout pass that follows a load.
     /// </summary>
     private void SyncZoom()
     {
@@ -193,8 +196,11 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
         _pdfView.Post(() =>
         {
-            if (!_disposed && _zoomNeedsApply && TryApplyZoom(_zoom))
+            if (!_disposed && _zoomNeedsApply && TryRestoreZoomAndPosition())
+            {
                 _zoomNeedsApply = false;
+                _positionNeedsApply = false;
+            }
         });
     }
 
@@ -225,14 +231,41 @@ public class PdfViewAndroid : IPdfView, IDisposable
         if (Math.Abs(_pdfView.Zoom - zoom) > float.Epsilon)
         {
             _pdfView.ZoomCenteredTo(zoom, new global::Android.Graphics.PointF(_pdfView.Width / 2f, _pdfView.Height / 2f));
-            _pdfView.LoadPages();
-            // Re-settles the page under a snapping display mode, as the animated path does.
-            _pdfView.PerformPageSnap();
-            // The viewport now covers a different set of pages.
-            EnsureVisiblePagesOpen();
+            RefreshRenderState();
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Reapplies zoom and pan after a reload. After a reattach, the saved zoom and offset are
+    /// a consistent pair, so ZoomTo + MoveTo restores both. Otherwise defers to
+    /// <see cref="TryApplyZoom"/>, which keeps the offset consistent with the zoom.
+    /// </summary>
+    private bool TryRestoreZoomAndPosition()
+    {
+        if (!_positionNeedsApply)
+            return TryApplyZoom(_zoom);
+
+        if (_pageCount == 0 || _pdfView.Width <= 0 || _pdfView.Height <= 0)
+            return false;
+
+        _pdfView.ZoomTo(_zoom);
+        _pdfView.MoveTo(_offsetX, _offsetY);
+        RefreshRenderState();
+
+        return true;
+    }
+
+    /// <summary>
+    /// Re-renders after a zoom or move: reloads visible tiles, re-snaps the page, and opens
+    /// the pages now in view.
+    /// </summary>
+    private void RefreshRenderState()
+    {
+        _pdfView.LoadPages();
+        _pdfView.PerformPageSnap();
+        EnsureVisiblePagesOpen();
     }
 
     /// <summary>
@@ -554,6 +587,11 @@ public class PdfViewAndroid : IPdfView, IDisposable
     private void OnDetachedFromWindow()
     {
         _wasDetached = true;
+
+        // Native state is already reset here, so rely on what ReportZoomIfChanged tracked -
+        // and only restore position if that tracking was live (not mid-load).
+        _positionNeedsApply |= !_zoomNeedsApply && _pageCount > 0;
+        _zoomNeedsApply = true;
     }
 
     // Only reload on a genuine reattach after a real detach - not the initial attach every
@@ -579,9 +617,15 @@ public class PdfViewAndroid : IPdfView, IDisposable
         // settle on the level to replay afterwards — the same treatment the current page
         // gets — and mark it unapplied.
         if (preserveZoom)
+        {
             CaptureZoom();
+        }
         else
+        {
             _zoom = Math.Clamp(1.0f, _minZoom, _maxZoom);
+            // New document: don't restore the previous one's position.
+            _positionNeedsApply = false;
+        }
 
         _zoomNeedsApply = true;
 
@@ -694,11 +738,11 @@ public class PdfViewAndroid : IPdfView, IDisposable
 
     /// <summary>
     /// Publishes the level the control is actually showing, so a caller bound to Zoom sees a
-    /// pinch or double-tap.
+    /// pinch or double-tap. Also records the pan offset for a reattach restore.
     ///
     /// This runs on the draw path, so it has to stay cheap: on all but the frames where the
-    /// zoom genuinely moved it is a field read and a float compare, and it allocates only
-    /// when it actually publishes.
+    /// zoom genuinely moved it is three property reads and a float compare, and it allocates
+    /// only when it actually publishes.
     ///
     /// The threshold is what keeps the round trip closed. Publishing sets Zoom on the virtual
     /// view, whose handler compares against this same control before pushing anything back,
@@ -711,6 +755,10 @@ public class PdfViewAndroid : IPdfView, IDisposable
         // loaded has no meaningful zoom to report.
         if (_disposed || _zoomNeedsApply || _pageCount == 0)
             return;
+
+        // Before the zoom check - a pan changes the offset without changing zoom.
+        _offsetX = _pdfView.CurrentXOffset;
+        _offsetY = _pdfView.CurrentYOffset;
 
         var zoom = Math.Clamp(_pdfView.Zoom, _minZoom, _maxZoom);
 
