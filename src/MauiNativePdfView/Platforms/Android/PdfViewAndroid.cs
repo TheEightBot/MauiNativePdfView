@@ -638,7 +638,7 @@ public class PdfViewAndroid : IPdfView, IDisposable
             {
                 FilePdfSource fileSource => _pdfView.FromFile(new Java.IO.File(fileSource.FilePath)),
                 UriPdfSource uriSource => _pdfView.FromUri(global::Android.Net.Uri.Parse(uriSource.Uri.ToString())),
-                StreamPdfSource streamSource => _pdfView.FromStream(streamSource.Stream),
+                StreamPdfSource streamSource => _pdfView.FromStream(streamSource.OpenDocument()),
                 BytesPdfSource bytesSource => _pdfView.FromBytes(bytesSource.Data),
                 AssetPdfSource assetSource => _pdfView.FromAsset(assetSource.AssetName),
                 _ => throw new NotSupportedException($"PDF source type {_source.GetType().Name} is not supported.")
@@ -803,17 +803,6 @@ public class PdfViewAndroid : IPdfView, IDisposable
         ApplyPageAlignment();
         Rendered?.Invoke(this, new RenderedEventArgs(pageCount));
     }
-
-    #region Helper Methods
-
-    private PDFView.Configurator FromStream(Stream stream)
-    {
-        var memoryStream = new MemoryStream();
-        stream.CopyTo(memoryStream);
-        return _pdfView.FromBytes(memoryStream.ToArray());
-    }
-
-    #endregion
 
     #region Listener Implementations
 
