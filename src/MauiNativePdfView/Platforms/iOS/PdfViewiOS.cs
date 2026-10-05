@@ -704,7 +704,8 @@ public class PdfViewiOS : IPdfView, IDisposable
                     break;
 
                 case StreamPdfSource streamSource:
-                    document = new PdfDocument(NSData.FromStream(streamSource.Stream));
+                    using (var documentStream = streamSource.OpenDocument())
+                        document = new PdfDocument(NSData.FromStream(documentStream));
                     break;
 
                 case BytesPdfSource bytesSource:
